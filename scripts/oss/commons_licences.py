@@ -20,7 +20,9 @@ from urllib.parse import unquote, urlparse
 ROOT = Path(__file__).resolve().parents[2]
 UA = {"User-Agent": "statecraft-israel-licence-audit/1.0 (https://github.com/eyalgolan/statecraft-israel)"}
 US_STATUS = ("PD-US", "Cc-zero")
-US_1996_TEMPLATES = {"PD-1996", "PD-1996-text"}
+# Only the {{PD-1996}} licence tag itself. {{PD-1996-text}} is a text helper that other tags also transclude,
+# including PD-India-URAA, PD-Poland and PD-HU-unknown, so on its own it is not an explicit US status.
+US_1996_TEMPLATES = {"PD-1996"}
 # Portrait files with no people.yaml record (promo/CREDITS.md lists Dayan as CC0).
 EXTRA = [("promo/ref/people/Moshe_Dayan_1962_CC0.jpg",
           "https://commons.wikimedia.org/wiki/File:Moshe_Dayan_met_mgr._A.C._Ramselaar_(cropped).jpg")]

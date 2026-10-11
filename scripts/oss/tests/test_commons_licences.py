@@ -57,5 +57,11 @@ def test_pd_1996_parameter_subtemplates_are_not_us_status_on_their_own():
 
 
 def test_actual_pd_1996_template_remains_verified():
-    r = cl.rule_for("p/a.jpg", "s", "Public domain", ["Template:PD-Polish", "Template:PD-1996-text"], "")
+    r = cl.rule_for("p/a.jpg", "s", "Public domain", ["Template:PD-1996", "Template:PD-1996-text"], "")
     assert r["status"] == "verified"
+
+
+def test_pd_1996_text_helper_alone_is_not_us_status():
+    # {{PD-India-URAA}} (and PD-Poland, PD-HU-unknown and others) transclude {{PD-1996-text}} without {{PD-1996}}.
+    r = cl.rule_for("p/a.jpg", "s", "Public domain", ["Template:PD-India-URAA", "Template:PD-1996-text"], "")
+    assert r["status"] == "owner-verify"
