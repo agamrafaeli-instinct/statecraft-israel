@@ -216,6 +216,25 @@ public class RealContentTests
     }
 
     [Fact]
+    public void OfficesLeftByDeathsIn1952HaveTheirSuccessors()
+    {
+        string Who(string office, int y, int m, int d) => Offices.Holder(C, office, new DateTime(y, m, d))?.Id ?? "(vacant)";
+        Assert.Equal("pinkas", Who("transportation_minister", 1952, 8, 13));
+        Assert.Equal("ben_gurion", Who("transportation_minister", 1952, 8, 14));
+        Assert.Equal("weizmann", Who("president", 1952, 11, 8));
+        Assert.Equal("(vacant)", Who("president", 1952, 11, 9));   // Sprinzak acting; acting holders are not modelled
+        Assert.Equal("(vacant)", Who("president", 1952, 12, 15));
+        Assert.Equal("ben_zvi", Who("president", 1952, 12, 16));
+    }
+
+    [Fact]
+    public void TheArmisticeEventsHaveAFiniteWindowEndingWith1949()
+    {
+        foreach (var id in new[] { "armistice_egypt", "armistice_jordan", "armistice_lebanon", "armistice_syria" })
+            Assert.Equal(new DateTime(1950, 1, 1), C.Events.Single(e => e.Id == id).To);
+    }
+
+    [Fact]
     public void CabinetChangesOf1950And1951()
     {
         string Who(string office, int y, int m, int d) => Offices.Holder(C, office, new DateTime(y, m, d))?.Id ?? "(vacant)";

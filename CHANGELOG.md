@@ -9,8 +9,13 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ### Added
 - Hebrew names and sourced birth and death dates for all 29 people (issue #1).
-- `rules.yaml` can set `open_events_until`, an end date for events that have no `to`; the current content uses
-  1952-01-01. Without it, an open event still needs an office holder forever, which complete death dates rule out.
+- Successors for offices left by deaths in 1952: Ben-Gurion takes Transportation after Pinkas (14 August 1952) and
+  Yitzhak Ben-Zvi becomes President on 16 December 1952 after Weizmann; the presidency is vacant in between, while
+  the Speaker was acting President (issue #1).
+
+### Changed
+- The four armistice events end with 1949 (`to: 1950-01-01`). They still fire on their 1949 dates; a finite window
+  means their Prime Minister placeholder doesn't need a holder after his death in 1973.
 - Historical-only deputy titles and sourced 1951 terms; Kaplan's June 1952 Deputy Prime Minister title and the linked Finance/Agriculture succession (issue #4).
 - People can carry a birth date and a source for each biographical value (Hebrew name, birth and death dates) in
   `people.yaml`; the loader rejects unknown source keys, sources without a `url` or `checked` date, and impossible birth

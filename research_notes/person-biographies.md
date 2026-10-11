@@ -1,6 +1,6 @@
 # Current person biographies
 
-Checked 11 October 2026. Scope: all 29 existing people in `content/people.yaml`, not office tenure, new people, portraits or balance. Hebrew names omit vowel points; maqaf and gershayim are normalised to ASCII hyphen and double quote. English Wikipedia infoboxes and Hebrew-name text were read for each value below. These dates are the sources' reported civil dates, not new calendar conversions.
+Checked 11 October 2026. Scope: the 29 people already in `content/people.yaml`, not office tenure, new people, portraits or balance. Hebrew names omit vowel points; maqaf and gershayim are normalised to ASCII hyphen and double quote. English Wikipedia infoboxes and Hebrew-name text were read for each value below. These dates are the sources' reported civil dates, not new calendar conversions.
 
 | Person ID | Hebrew name | Birth | Death | Source read |
 | --- | --- | --- | --- | --- |
@@ -43,3 +43,22 @@ Checked 11 October 2026. Scope: all 29 existing people in `content/people.yaml`,
 - A contemporary JTA obituary says he was 87 but supplies no exact birth date; that age cannot settle the conflict: https://www.jta.org/archive/rabbi-maimon-first-israel-minister-for-religious-affairs-dies-was-87 .
 
 No later death date is used to invent a term end. This pass depends on #167's open-term loader boundary. Deaths after February 1952 can affect later simulation dates even though the existing Hash1950/Hash1952 tests remain unchanged.
+
+## 1952 successors (maintainer review, checked 11 October 2026)
+
+With death dates filled in, two offices fell vacant inside the open Third Government. Their successors were added:
+
+- **Transportation.** Pinkas died in office on 14 August 1952; Ben-Gurion held the portfolio from 14 August to
+  24 December 1952. Sources: https://en.wikipedia.org/wiki/Third_government_of_Israel (cabinet table) and
+  https://en.wikipedia.org/wiki/Ministry_of_Transport_and_Road_Safety (list of ministers). The term is left open, like
+  the other Third Government terms, until the Fourth Government is authored (#26); Yosef Serlin then Yosef Sapir follow.
+- **President.** Weizmann died on 9 November 1952. The Knesset elected Yitzhak Ben-Zvi on 8 December 1952 and he took
+  office on 16 December 1952; Speaker Yosef Sprinzak was acting President in between.
+  https://en.wikipedia.org/wiki/1952_Israeli_presidential_election states all three facts. 16 December is also the en.wiki
+  infobox start (https://en.wikipedia.org/wiki/Yitzhak_Ben-Zvi) and the date in the he.wiki list of presidents
+  (https://he.wikipedia.org/wiki/נשיא_מדינת_ישראל); the he.wiki Ben-Zvi infobox gives 8 December, the election date.
+  Acting holders are not modelled, so the presidency is vacant from 9 November to 15 December 1952.
+- **Ben-Zvi** (`ben_zvi`, new row): Hebrew name יצחק בן-צבי (en.wiki lead). Born 6 December 1884 (Gregorian), per
+  https://he.wikipedia.org/wiki/יצחק_בן-צבי , whose note says 24 November (the en.wiki infobox date) is the Julian date
+  then used in Russia. Died 23 April 1963 (en.wiki and he.wiki). No portrait (initials); competence and loyalty are
+  game balance.

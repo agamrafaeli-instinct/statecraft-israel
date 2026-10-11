@@ -50,11 +50,6 @@ Rules the loader enforces:
 - Any other `{` or `}` is an error (no braces for emphasis).
 - The office must have a holder on **every day of the window** (`from` up to `to`). If the office is vacant for even
   a day, or the window is open-ended and the last holder's term ends, loading fails and the message gives the date.
-- `rules.yaml` may declare `open_events_until`, an exclusive authoring horizon for events that omit `to`.
-  The loader gives those events that same end for coverage, triggering, and late/pending text. Explicit `to`
-  values are unchanged. Without this setting, open windows still require indefinite coverage. This is a
-  game-content boundary, not a historical event end or an exception to death eligibility. The current M3
-  content uses `1952-01-01`; extend it as later events and office coverage are authored.
 - If the window has already closed when the event reaches the player (it can fire late), the names are filled in for
   the last day of the window.
 

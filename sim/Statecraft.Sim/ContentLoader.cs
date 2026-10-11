@@ -184,14 +184,6 @@ namespace Statecraft.Sim
             foreach (var rel in eventFiles.OrderBy(p => p, StringComparer.Ordinal))
             {
                 var e = Read<GameEvent>(readFile, rel);
-                // A declared authoring horizon gives open events the same finite window in validation and runtime.
-                // Explicit windows are untouched; without a horizon the existing indefinite rule stays strict.
-                if (!e.To.HasValue && c.Rules.OpenEventsUntil.HasValue)
-                {
-                    if (e.From >= c.Rules.OpenEventsUntil.Value)
-                        throw new ContentException(rel, $"events[{e.Id}].to", FormattableString.Invariant($"required: the event starts on or after rules.yaml open_events_until ({c.Rules.OpenEventsUntil:yyyy-MM-dd}); give it a to or move the horizon"));
-                    e.To = c.Rules.OpenEventsUntil;
-                }
                 e.File = rel;
                 c.Events.Add(e);
             }
@@ -468,8 +460,6 @@ namespace Statecraft.Sim
                 }
             foreach (var a in c.Actors) Unit("model.yaml", $"actors[{a.Id}].standing", a.Standing);
             if (c.Rules.Start == default) throw new ContentException("rules.yaml", "start", "required");
-            if (c.Rules.OpenEventsUntil.HasValue && c.Rules.OpenEventsUntil.Value <= c.Rules.Start)
-                throw new ContentException("rules.yaml", "open_events_until", "must be after start");
             if (!(c.Rules.AttentionPerTurn >= 0 && !double.IsInfinity(c.Rules.AttentionPerTurn))) throw new ContentException("rules.yaml", "attention_per_turn", "must be a finite non-negative number");
             if (!(c.Rules.RungAttentionStep >= 0 && !double.IsInfinity(c.Rules.RungAttentionStep))) throw new ContentException("rules.yaml", "rung_attention_step", "must be a finite non-negative number");
             foreach (var kv in c.Rules.AttentionCost)

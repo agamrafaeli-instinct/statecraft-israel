@@ -30,6 +30,9 @@ people:
       - { office: defense_minister, from: 1948-05-14, sources: *prov }
       # Held Education after Remez died in office on 19 May 1951.
       - { office: education_minister, from: 1951-05-19, to: 1951-10-08, sources: &second [{ url: "https://en.wikipedia.org/wiki/Second_government_of_Israel", checked: 2026-10-10 }, { url: "https://he.wikipedia.org/wiki/ממשלת_ישראל_השנייה", checked: 2026-10-10 }] }
+      # Held Transportation after Pinkas died in office on 14 August 1952. The sources end it on 24 December 1952 (Fourth
+      # Government); it stays open until that government is authored (#26), like the other Third Government terms.
+      - { office: transportation_minister, from: 1952-08-14, sources: [{ url: "https://en.wikipedia.org/wiki/Third_government_of_Israel", checked: 2026-10-11 }, { url: "https://en.wikipedia.org/wiki/Ministry_of_Transport_and_Road_Safety", checked: 2026-10-11 }] }
     status: fact-checked
   - id: zisling
     name: Aharon Zisling
@@ -463,7 +466,8 @@ people:
     competence: 6
     loyalty: 6
     offices:
-      - { office: transportation_minister, from: 1951-10-08, sources: *third }
+      # Died in office on 14 August 1952; Ben-Gurion took the portfolio the same day.
+      - { office: transportation_minister, from: 1951-10-08, to: 1952-08-14, sources: [*third_en, *third_he, { url: "https://en.wikipedia.org/wiki/Ministry_of_Transport_and_Road_Safety", checked: 2026-10-11 }] }
     status: fact-checked
   - id: naftali
     name: Peretz Naftali
@@ -502,7 +506,28 @@ people:
       - { office: president, from: 1949-02-17, to: 1951-11-19, sources: [{ url: "https://en.wikipedia.org/wiki/Chaim_Weizmann", checked: 2026-10-10 }, { url: "https://en.wikipedia.org/wiki/1949_Israeli_presidential_election", checked: 2026-10-10 }, { url: "https://weizmann.ac.il/WeizmannCompass/node/914", checked: 2026-10-10 }] }
       # The second term starts on the election date (notes section 3); he was sworn in at Rehovot on 25 November 1951
       # (stated on the cited en.wiki 1951 presidential election page), which is not used as a date.
-      - { office: president, from: 1951-11-19, sources: [{ url: "https://en.wikipedia.org/wiki/1951_Israeli_presidential_election", checked: 2026-10-10 }, { url: "https://en.wikipedia.org/wiki/1951_in_Israel", checked: 2026-10-10 }] }
+      # Died in office on 9 November 1952.
+      - { office: president, from: 1951-11-19, to: 1952-11-09, sources: [{ url: "https://en.wikipedia.org/wiki/1951_Israeli_presidential_election", checked: 2026-10-10 }, { url: "https://en.wikipedia.org/wiki/1951_in_Israel", checked: 2026-10-10 }, { url: "https://en.wikipedia.org/wiki/1952_Israeli_presidential_election", checked: 2026-10-11 }] }
+    status: fact-checked
+  - id: ben_zvi
+    name: Yitzhak Ben-Zvi
+    name_he: יצחק בן-צבי
+    # Gregorian date; en.wikipedia gives 24 November 1884, the Julian date then used in Russia (he.wikipedia's note).
+    born: 1884-12-06
+    died: 1963-04-23
+    biography_sources:
+      name_he: &ben_zvi_bio [{ url: "https://en.wikipedia.org/wiki/Yitzhak_Ben-Zvi", checked: 2026-10-11 }]
+      born: [{ url: "https://he.wikipedia.org/wiki/יצחק_בן-צבי", checked: 2026-10-11 }]
+      died: [{ url: "https://en.wikipedia.org/wiki/Yitzhak_Ben-Zvi", checked: 2026-10-11 }, { url: "https://he.wikipedia.org/wiki/יצחק_בן-צבי", checked: 2026-10-11 }]
+    living: false
+    party: ""
+    competence: 7
+    loyalty: 8
+    offices:
+      # Elected by the Knesset on 8 December 1952, took office on 16 December 1952. From Weizmann's death on 9 November,
+      # Speaker Yosef Sprinzak was acting President; acting holders are not modelled, so the office is vacant until then.
+      # The term runs past the Fourth Government (24 December 1952) and stays open, like the other open terms.
+      - { office: president, from: 1952-12-16, sources: [{ url: "https://en.wikipedia.org/wiki/1952_Israeli_presidential_election", checked: 2026-10-11 }, { url: "https://en.wikipedia.org/wiki/Yitzhak_Ben-Zvi", checked: 2026-10-11 }, { url: "https://he.wikipedia.org/wiki/נשיא_מדינת_ישראל", checked: 2026-10-11 }] }
     status: fact-checked
   - id: dori
     name: Yaakov Dori
