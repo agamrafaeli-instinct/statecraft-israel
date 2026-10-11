@@ -26,7 +26,7 @@ def test_share_alike_is_recorded_as_unknown_licence():
 
 def test_explicit_us_restoration_warning_cannot_be_verified_by_nested_pd_text():
     r = cl.rule_for("p/a.jpg", "s", "Public domain",
-                    ["Template:PD-Israel", "Template:Not-PD-US-URAA",
+                    ["Template:PD-Israel", "Template:PD-US-expired", "Template:Not-PD-US-URAA",
                      "Template:PD-1996-text/country", "Template:PD-1996-text/date"], "")
     assert r["status"] == "owner-verify"
     assert "Not-PD-US-URAA" in r["note"]
