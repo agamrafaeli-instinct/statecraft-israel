@@ -136,6 +136,8 @@ namespace Statecraft.Sim
     public sealed class Rules
     {
         public DateTime Start { get; set; }
+        /// <summary>Optional exclusive end for events without an explicit To. Authoring horizon, not an office/death cutoff.</summary>
+        public DateTime? OpenEventsUntil { get; set; }
         public int StartRung { get; set; } = 1;
         public double AttentionPerTurn { get; set; }
         public Dictionary<string, double> AttentionCost { get; set; } = new Dictionary<string, double>();
