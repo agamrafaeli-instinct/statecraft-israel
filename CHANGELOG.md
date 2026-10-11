@@ -23,6 +23,8 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
   again. Presentation only; `?nofallback` turns it off (#44).
 
 ### Changed
+- Source Dov Yosef's food-supply and rationing responsibility in the Third Government from 8 October 1951,
+  replacing the unsupported vacancy (#2).
 - The historical AI no longer sends an order the turn's attention cannot cover (the rule the UI's order queue applies),
   so the sim never has to refuse one; the golden playthroughs are unchanged.
 - The browser build downloads a smaller heightmap: `heightmap.r16z` (4.1 MB, packed losslessly: row deltas in byte
