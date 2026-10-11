@@ -8,6 +8,7 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 ## [Unreleased]
 
 ### Added
+- Hebrew UI translation data with key and format-token checks; not yet enabled in the game (#12).
 - A local multi-size favicon for the WebGL page.
 - Hebrew names and sourced birth and death dates for all 29 people (issue #1).
 - Successors for offices left by deaths in 1952: Ben-Gurion takes Transportation after Pinkas (14 August 1952) and
