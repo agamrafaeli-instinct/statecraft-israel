@@ -165,7 +165,9 @@ Published at: (owner fills in)
 - **Test plan (OWNER STEP, deferred to M4 with the upload; after the first two uploads):**
   1. Use one browser profile throughout, without clearing site data or using private mode. Record browser/version, OS,
      project page URL and the actual game-frame URL/origin (not only the outer itch.io page). Upload A as above. Play two
-     turns and copy the last `TURN` line, including date, turn and full state hash. Record upload/build ID and content hash.
+     turns and copy the last `TURN` line, including date, turn and full state hash. Record the upload/build ID, the git
+     commit the build was made from and the zip's SHA-256. The game does not print its content hash; an identical zip
+     guarantees identical content.
   2. Reload A. Expected: `GAME OK` gives the same date, turn and state hash as that last `TURN` line. Wait for the game to
      finish loading before reading it. Do not press New Game or End Turn after taking the baseline.
   3. Upload B to the same project, replacing A, with unchanged game content and save schema for this persistence control.
@@ -181,9 +183,9 @@ Published at: (owner fills in)
   6. Record the result below. This plan is not a completed itch.io test or a Firefox/Safari/Windows runtime check.
 
 **Separate changed-content replay check:** after the unchanged-content control, a build with intentional content changes
-may show "This save was made with different game content; the replayed game may differ." Record both content hashes and
-that warning. Matching date/turn in this case is not evidence of exact state preservation, and it does not replace the
-unchanged-content persistence control above. A changed state hash may be a replay effect rather than a storage failure.
+may show "This save was made with different game content; the replayed game may differ." Record that warning and both
+builds' git commits. Matching date/turn in this case is not evidence of exact state preservation, and it does not
+replace the unchanged-content persistence control above. A changed state hash may be a replay effect rather than a storage failure.
 
 Result: not run on itch.io (owner step).
 
@@ -195,7 +197,7 @@ Result: not run on itch.io (owner step).
 | Upload A/build ID and game-frame URL | pending |
 | Upload B/build ID and game-frame URL | pending |
 | Game-frame origin A / B | pending |
-| Content hash and save schema A / B | pending |
+| Git commit and zip SHA-256 A / B | pending |
 | Date / turn before and after | pending |
 | State hash before | pending |
 | State hash after | pending |
