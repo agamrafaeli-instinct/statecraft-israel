@@ -37,6 +37,7 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 ### Changed
 - Ben-Gurion's in-game portrait is now a crop of Abbie Rowe's 8 May 1951 White House photo (NARA 200318,
   PD-USGov) instead of a Government Press Office photo with no clear US status (#30, decision D-P).
+- Later death dates can be recorded for people with open-ended terms in the latest authored government; explicit term ends still cannot pass the holder's death.
 - Source Dov Yosef's food-supply and rationing responsibility in the Third Government from 8 October 1951,
   replacing the unsupported vacancy (#2).
 - The interface is restyled to the promo art (`promo/final/03`, `04`, `05`, `08`):
