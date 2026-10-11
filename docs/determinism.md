@@ -52,7 +52,8 @@ Each golden constant is written in three places that must agree:
 (run `tools/build_sim_for_unity.sh` first so Unity has the current DLLs).
 
 Verified on .NET, Unity editor Mono, a macOS IL2CPP player (Apple clang, no `-ffp-contract=off` needed) and a WebGL
-IL2CPP player in Chrome (M3 Task 22). The platform checks below used the prior `73590e32` 1952 baseline. The issue #2 content correction has been rechecked on .NET only; Unity/WebGL/macOS revalidation is still needed.
+IL2CPP player in Chrome (M3 Task 22). The platform checks below used the prior `73590e32` 1952 baseline. The issue #2
+content correction has been rechecked on .NET only; Unity/WebGL/macOS revalidation is still needed.
 
 Re-checked at the M3 merge candidate (2026-10-11, commit a099655):
 - macOS IL2CPP player (`Build.Mac`, then `-batchmode -nographics -golden`): **exit 0**, printing

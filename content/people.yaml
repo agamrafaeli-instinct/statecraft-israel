@@ -202,12 +202,12 @@ people:
       - { office: rationing_minister, from: 1949-04-26, to: 1950-11-01, sources: &rationing [{ url: "https://en.wikipedia.org/wiki/Rationing_and_Supply_Minister_of_Israel", checked: 2026-10-10 }, { url: "https://he.wikipedia.org/wiki/תקופת_הצנע", checked: 2026-10-10 }] }
       - { office: transportation_minister, from: 1950-11-01, to: 1951-10-08, sources: *second }
       # en.wiki lists Trade and Industry and Justice; he.wiki lists only Trade and Industry clearly (research notes 1e).
+      - { office: trade_minister, from: 1951-10-08, sources: *third }
+      - { office: justice_minister, from: 1951-10-08, sources: *third }
       # Food supply and rationing within Trade and Industry, not a revival of the abolished ministry.
       # Schiffman/Goldstein (2026), pp.6 n.9, 33, 62; Knesset 7 January 1952, questions 8-10.
       # Exact start is explicit in the archival working paper; the research note records the conflicting Rozin date.
       - { office: rationing_minister, from: 1951-10-08, to: 1952-12-24, sources: [{ url: "https://mpra.ub.uni-muenchen.de/129488/1/MPRA_paper_129488.pdf", checked: 2026-10-11 }, { url: "https://fs.knesset.gov.il/2/Plenum/2_ptm_250631.pdf", checked: 2026-10-11 }] }
-      - { office: trade_minister, from: 1951-10-08, sources: *third }
-      - { office: justice_minister, from: 1951-10-08, sources: *third }
     status: fact-checked
   - id: shazar
     name: Zalman Shazar

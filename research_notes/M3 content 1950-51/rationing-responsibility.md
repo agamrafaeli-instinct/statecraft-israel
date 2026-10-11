@@ -30,18 +30,4 @@ Orit Rozin's article, printed p.93, really says: "נרשמה גם בקיץ 1952 
 https://humanities.tau.ac.il/sites/humanities.tau.ac.il/files/media_server/humanities/zionism/%D7%99%D7%A9%D7%A8%D7%90%D7%9C/1/Israel1_Rozin.pdf
 
 ## Content record
-Under dov_yosef.offices in content/people.yaml:
-
-```yaml
-# Food-supply and rationing responsibility within Trade and Industry, not the abolished ministry.
-# Schiffman/Goldstein (2026), pp.6 n.9, 33, 62: returned with the Third Government on 8 October 1951.
-# Corroborated by Knesset 7 January 1952, questions 8-10; research note records Rozin's conflicting date.
-- office: rationing_minister
-  from: 1951-10-08
-  to: 1952-12-24
-  sources:
-    - { url: "https://mpra.ub.uni-muenchen.de/129488/1/MPRA_paper_129488.pdf", checked: 2026-10-11 }
-    - { url: "https://fs.knesset.gov.il/2/Plenum/2_ptm_250631.pdf", checked: 2026-10-11 }
-```
-
-The end date is the paper's p.62 government transition date, beyond the current end-1951 simulation; add it to avoid implying an indefinite term. Keep Lavon's existing end date. Replace the two comments that say no source names a minister after 8 October. Add a short research-note addendum with all citations and the unresolved Rozin discrepancy. Add boundary tests: Lavon on 7 October; Yosef on 8 October and through the end of 1951. Validation is recorded in the pull request.
+The end date (24 December 1952, when the Fourth Government took office and Peretz Bernstein succeeded Yosef at Trade and Industry) is from the paper's p.62 timeline; it lies beyond the current end-1951 simulation. The landed entry is under `dov_yosef` in `content/people.yaml`, with boundary tests in `RealContentTests.CabinetChangesOf1950And1951`.
