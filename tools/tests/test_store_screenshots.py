@@ -31,7 +31,7 @@ def test_five_widescreen_images_pass_and_four_fail(tmp_path):
 def test_smaller_readme_shot_and_wrong_ratio_fail(tmp_path):
     m = module()
     paths = shots(tmp_path)
-    Image.new('RGB', (1640, 920)).save(paths[0])
+    Image.new('RGB', (1568, 752)).save(paths[0])  # the README build shots (docs/images/build-m3-*.jpg)
     errors = m.validate(paths)
     assert any('1920 x 1080' in e and '0.png' in e for e in errors)
     Image.new('RGB', (1920, 1200)).save(paths[0])

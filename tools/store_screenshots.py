@@ -1,7 +1,11 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["pillow==12.3.0"]
+# ///
 """#45: check a proposed Steam screenshot set's count/dimensions, not its contents.
 
-python3 tools/store_screenshots.py path/to/shot1.png ... path/to/shot5.png
-Requires Pillow. At least five different paths, minimum 1920 x 1080 and exact 16:9.
+Usage: uv run tools/store_screenshots.py path/to/shot1.png ... path/to/shot5.png
+At least five different paths, minimum 1920 x 1080 and exact 16:9.
 This cannot establish real gameplay, rights, age suitability or store approval.
 Steam source checked 2026-10-11: https://partner.steamgames.com/doc/store/assets/standard
 """

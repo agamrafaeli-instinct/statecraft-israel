@@ -77,12 +77,13 @@ Copernicus notice.
 `ASSETS.yaml` and `ASSETS.portraits.yaml`. It groups only explicit `ai_generated: true` rows by media kind,
 keeps source/status and manifest names, and includes the README's no-live-generation statement. It does not
 change flags, clear licences, expand asset patterns into filenames, or answer the store content survey.
-### Steam screenshot dimensions (#45)
+
+## Steam screenshot dimensions (#45)
 
 Before the owner reviews a proposed set of store screenshots, run:
 
 ```bash
-uv run --with pillow==12.3.0 tools/store_screenshots.py path/to/shot1.png path/to/shot2.png path/to/shot3.png path/to/shot4.png path/to/shot5.png
+uv run tools/store_screenshots.py path/to/shot1.png path/to/shot2.png path/to/shot3.png path/to/shot4.png path/to/shot5.png
 ```
 
 This refuses unreadable images, fewer than five distinct paths, dimensions below 1920 x 1080, or a non-16:9 ratio.
