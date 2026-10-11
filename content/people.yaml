@@ -513,6 +513,8 @@ people:
       # (stated on the cited en.wiki 1951 presidential election page), which is not used as a date.
       # Died in office on 9 November 1952.
       - { office: president, from: 1951-11-19, to: 1952-11-09, sources: [{ url: "https://en.wikipedia.org/wiki/1951_Israeli_presidential_election", checked: 2026-10-10 }, { url: "https://en.wikipedia.org/wiki/1951_in_Israel", checked: 2026-10-10 }, { url: "https://en.wikipedia.org/wiki/1952_Israeli_presidential_election", checked: 2026-10-11 }] }
+    # Bain/LOC dates this earlier likeness ca. 1915-1920, not his presidential term.
+    portrait: { file: promo/ref/people/Chaim_Weizmann_Bain.jpg, license: Public domain, source: "https://commons.wikimedia.org/wiki/File:C._(Chaim)_Weizmann_LCCN2014712248.jpg", focus_y: 0.32 }
     status: fact-checked
   - id: ben_zvi
     name: Yitzhak Ben-Zvi
@@ -533,6 +535,8 @@ people:
       # Speaker Yosef Sprinzak was acting President; acting holders are not modelled, so the office is vacant until then.
       # The term runs past the Fourth Government (24 December 1952) and stays open, like the other open terms.
       - { office: president, from: 1952-12-16, sources: [{ url: "https://en.wikipedia.org/wiki/1952_Israeli_presidential_election", checked: 2026-10-11 }, { url: "https://en.wikipedia.org/wiki/Yitzhak_Ben-Zvi", checked: 2026-10-11 }, { url: "https://he.wikipedia.org/wiki/נשיא_מדינת_ישראל", checked: 2026-10-11 }] }
+    # Anefo photograph from 15 July 1958, after the Founding slice but within his presidency.
+    portrait: { file: promo/ref/people/Yitzhak_Ben_Zvi_CC0_1958.jpg, license: CC0, source: "https://commons.wikimedia.org/wiki/File:President_Isaac_Ben_Zwi_,_president_van_Israel_en_echtgenote_ontvangen_door_het_,_Bestanddeelnr_909-7131.jpg", focus_y: 0.32 }
     status: fact-checked
   - id: dori
     name: Yaakov Dori
@@ -548,7 +552,6 @@ people:
     loyalty: 8
     offices:
       - { office: chief_of_staff, from: 1947-06-01, to: 1949-11-09, sources: &cos [{ url: "https://en.wikipedia.org/wiki/Chief_of_the_General_Staff_(Israel)", checked: 2026-10-09 }] }
-    portrait: { file: promo/ref/people/Yaakov_Dori_CC0.jpg, license: CC0, source: "https://commons.wikimedia.org/wiki/File:Stafchef_Dori_houdt_toespraak_tijdens_de_militaire_parade_bij_gelegenheid_van_de,_Bestanddeelnr_255-0981.jpg", focus_y: 0.3 }
     status: fact-checked
   - id: yadin
     name: Yigael Yadin
