@@ -20,6 +20,10 @@ CC0: "Moshe Dayan met mgr. A.C. Ramselaar (cropped).jpg" (1962).
 - Golda Meir: crop of Willem van de Poll / Nationaal Archief 255-4314, 1964, {{Cc-zero}}:
   https://commons.wikimedia.org/wiki/File:Golda_Meir%2C_minister_van_buitenlandse_zaken_van_Israel%2C_Bestanddeelnr_255-4314.jpg
 
+- Yitzhak Ben-Zvi: crop of Harry Pot / Anefo / Nationaal Archief 909-7131, 15 July 1958, {{Cc-zero}}:
+  https://commons.wikimedia.org/wiki/File:President_Isaac_Ben_Zwi_,_president_van_Israel_en_echtgenote_ontvangen_door_het_,_Bestanddeelnr_909-7131.jpg
+  https://www.nationaalarchief.nl/onderzoeken/fotocollectie/a98090b0-d0b4-102d-bcf8-003048976d84
+  Later than the Founding slice; profile crop, not a 1952-1956 photograph.
 - Chaim Weizmann: crop of Bain News Service / Library of Congress ggbain.32095, ca. 1915-1920,
   {{PD-Bain}} / {{PD-old-70-expired}} (including explicit US-expired status):
   https://commons.wikimedia.org/wiki/File:C._(Chaim)_Weizmann_LCCN2014712248.jpg
