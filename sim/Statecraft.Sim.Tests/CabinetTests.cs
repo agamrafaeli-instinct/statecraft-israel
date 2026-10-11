@@ -258,6 +258,10 @@ public class CabinetTests
         Assert.All(Cabinet.Candidates(c, s, "historical_title"), candidate => Assert.NotNull(candidate.reason));
         Assert.NotNull(Cabinet.Appoint(c, s, "historical_title", "pm_one", new List<Cause>()));
         Assert.Empty(s.Appointments);
+        s.AppointedUnder = Offices.Government(c, s.Date)!.Id;
+        s.Appointments["historical_title"] = new Appointment("pm_one", s.Date);
+        Assert.Equal("def_two", Cabinet.Holder(c, s, "historical_title")?.Id);
+        Assert.Equal("Def Two", Cabinet.Fill(c, s, "{historical_title}", s.Date));
     }
 
     [Fact]
