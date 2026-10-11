@@ -184,6 +184,9 @@ namespace Statecraft.Sim
             foreach (var rel in eventFiles.OrderBy(p => p, StringComparer.Ordinal))
             {
                 var e = Read<GameEvent>(readFile, rel);
+                // A declared authoring horizon gives open events the same finite window in validation and runtime.
+                // Explicit windows are untouched; without a horizon the existing indefinite rule stays strict.
+                if (!e.To.HasValue) e.To = c.Rules.OpenEventsUntil;
                 e.File = rel;
                 c.Events.Add(e);
             }
@@ -372,11 +375,17 @@ namespace Statecraft.Sim
                     foreach (var t in p.Offices.Where(t => t.Office == o.Id))
                         if (!t.To.HasValue || t.To.Value > o.Until!.Value)
                             throw new ContentException("people.yaml", $"people[{p.Id}].offices.{o.Id}.to", FormattableString.Invariant($"must be on or before {o.Until:yyyy-MM-dd}, when the office was abolished"));
-            var latestGovernmentStart = c.Governments.Max(g => g.From);
+            // An open-ended term runs past the authored governments, so it only conflicts with a death before the latest
+            // government began (#167). With no governments, every open-ended term conflicts, as before.
+            var latestGovernmentStart = c.Governments.Count > 0 ? c.Governments.Max(g => g.From) : DateTime.MaxValue;
             foreach (var p in c.People.Where(p => p.Died.HasValue))
                 foreach (var t in p.Offices)
+                {
+                    if (t.From >= p.Died!.Value)
+                        throw new ContentException("people.yaml", $"people[{p.Id}].offices.{t.Office}.from", FormattableString.Invariant($"must be before {p.Died:yyyy-MM-dd}, the date of death"));
                     if (t.To.HasValue ? t.To.Value > p.Died!.Value : p.Died!.Value < latestGovernmentStart)
                         throw new ContentException("people.yaml", $"people[{p.Id}].offices.{t.Office}.to", FormattableString.Invariant($"must be on or before {p.Died:yyyy-MM-dd}, the date of death"));
+                }
             foreach (var p in c.People)
                 for (int i = 0; i < p.Offices.Count; i++)
                     for (int j = i + 1; j < p.Offices.Count; j++)
@@ -454,6 +463,8 @@ namespace Statecraft.Sim
                 }
             foreach (var a in c.Actors) Unit("model.yaml", $"actors[{a.Id}].standing", a.Standing);
             if (c.Rules.Start == default) throw new ContentException("rules.yaml", "start", "required");
+            if (c.Rules.OpenEventsUntil.HasValue && c.Rules.OpenEventsUntil.Value <= c.Rules.Start)
+                throw new ContentException("rules.yaml", "open_events_until", "must be after start");
             if (!(c.Rules.AttentionPerTurn >= 0 && !double.IsInfinity(c.Rules.AttentionPerTurn))) throw new ContentException("rules.yaml", "attention_per_turn", "must be a finite non-negative number");
             if (!(c.Rules.RungAttentionStep >= 0 && !double.IsInfinity(c.Rules.RungAttentionStep))) throw new ContentException("rules.yaml", "rung_attention_step", "must be a finite non-negative number");
             foreach (var kv in c.Rules.AttentionCost)
