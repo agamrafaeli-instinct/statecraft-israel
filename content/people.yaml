@@ -37,9 +37,9 @@ people:
   - id: kaplan
     name: Eliezer Kaplan
     living: false
-    # Died in office on 13 July 1952 (en.wikipedia.org/wiki/Eliezer_Kaplan and he.wikipedia.org/wiki/אליעזר_קפלן,
-    # checked 2026-10-11).
+    # Died in office on 13 July 1952.
     died: 1952-07-13
+    biography_sources: { died: [{ url: "https://en.wikipedia.org/wiki/Eliezer_Kaplan", checked: 2026-10-11 }, { url: "https://he.wikipedia.org/wiki/אליעזר_קפלן", checked: 2026-10-11 }] }
     party: mapai
     competence: 8
     loyalty: 9
