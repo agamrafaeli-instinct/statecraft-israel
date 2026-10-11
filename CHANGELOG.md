@@ -7,6 +7,9 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ## [Unreleased]
 
+- End Ben-Gurion's 1952 Transportation term at the sourced 24 December handover; successors remain unmodeled pending #26.
+
+
 ### Added
 - A local multi-size favicon for the WebGL page.
 - Hebrew names and sourced birth and death dates for all 29 people (issue #1).
