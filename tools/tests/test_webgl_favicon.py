@@ -1,5 +1,4 @@
 """The WebGL template's icon is linked and served beside index.html (no Unity needed)."""
-from functools import partial
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.request import urlopen
@@ -33,8 +32,7 @@ def test_webgl_template_links_a_local_multisize_icon():
         assert image.ico.sizes() == {(16, 16), (32, 32), (48, 48)}
 
 
-def test_favicon_is_served_at_template_relative_url(monkeypatch):
-    monkeypatch.setattr(wc, "Handler", partial(wc.Handler, directory=str(TEMPLATE)))
+def test_favicon_is_served_at_template_relative_url():
     server = wc.serve(TEMPLATE)
     try:
         base = f"http://localhost:{server.server_address[1]}"
