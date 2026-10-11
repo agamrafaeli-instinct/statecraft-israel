@@ -8,6 +8,7 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 ## [Unreleased]
 
 ### Added
+- Optional person birth dates and per-field biography sources, as a prototype for issue #1.
 - Browser-playable 1948–1951 (milestone M3): HUD, Cabinet with appointments, Budget, Events, Defence and "Why did this
   happen?" screens over the 3D hex map; sourced content to 31 December 1951; saves; a calibrated economy; the golden
   hash checked in WebGL and macOS players.
