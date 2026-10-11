@@ -100,6 +100,17 @@ public class PeriodValidationTests
     }
 
     [Fact]
+    public void AHolderWhoDiesInTheLatestGovernmentLeavesAnOpenTermOnTheDateOfDeath()
+    {
+        // gov2 (the latest) starts 1949-03-10; Pm One's prime_minister term is open-ended.
+        var people = Fixture.Files["people.yaml"].Replace("    name: Pm One\n", "    name: Pm One\n    died: 1949-06-01\n");
+        var c = ContentLoader.Load(Fixture.Write(new Dictionary<string, string> { ["people.yaml"] = people }));
+        Assert.Equal("pm_one", Offices.Holder(c, "prime_minister", new DateTime(1949, 5, 31))!.Id);
+        Assert.Null(Offices.Holder(c, "prime_minister", new DateTime(1949, 6, 1)));
+        Assert.Null(Offices.Holder(c, "prime_minister", new DateTime(1950, 1, 1)));
+    }
+
+    [Fact]
     public void AnOpenTermStartingOnTheHoldersDeathIsALoadError()
     {
         // The later-death rule must not let an open term begin after its holder died.
