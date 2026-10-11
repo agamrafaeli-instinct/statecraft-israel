@@ -17,6 +17,24 @@ public class RealContentTests
     static readonly DateTime Checked = new DateTime(2026, 10, 9);
 
     [Fact]
+    public void BenGurionBiographyValuesAreSourced()
+    {
+        var p = C.People.Single(p => p.Id == "ben_gurion");
+        Assert.Equal("דוד בן-גוריון", p.NameHe);
+        Assert.Equal(new DateTime(1886, 10, 16), p.Born);
+        Assert.Equal(new DateTime(1973, 12, 1), p.Died);
+        foreach (var key in new[] { "name_he", "born", "died" })
+        {
+            Assert.NotEmpty(p.BiographySources[key]);
+            Assert.All(p.BiographySources[key], source =>
+            {
+                Assert.True(Uri.TryCreate(source.Url, UriKind.Absolute, out var uri) && (uri.Scheme == "https" || uri.Scheme == "http"));
+                Assert.Equal(new DateTime(2026, 10, 11), source.Checked);
+            });
+        }
+    }
+
+    [Fact]
     public void EveryHistoricalRecordIsSourcedAndFactChecked()
     {
         foreach (var p in C.People)
