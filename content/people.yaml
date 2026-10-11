@@ -215,10 +215,12 @@ people:
   - id: maimon
     name: Yehuda Leib Maimon
     name_he: יהודה לייב מימון
-    # Birth date unresolved: 1 January versus 11/12 December 1875; see research_notes/person-biographies.md.
+    # Hebrew biography date chosen; the conflicting English/dictionary dates are recorded in research_notes/person-biographies.md.
+    born: 1875-12-11
     died: 1962-07-10
     biography_sources:
       name_he: &maimon_bio [{ url: "https://en.wikipedia.org/wiki/Yehuda_Leib_Maimon", checked: 2026-10-11 }]
+      born: [{ url: "https://he.wikipedia.org/wiki/יהודה_לייב_פישמן_מימון", checked: 2026-10-11 }]
       died: *maimon_bio
     living: false
     party: mizrachi
