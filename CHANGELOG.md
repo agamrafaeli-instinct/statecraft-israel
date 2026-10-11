@@ -7,6 +7,8 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ## [Unreleased]
 
+- Add a CC0 Golda portrait and use a US-government 1951 Ben-Gurion portrait crop; retain the old reference and keep human likeness review pending.
+
 ### Added
 - Historical-only deputy titles and sourced 1951 terms; Kaplan's June 1952 Deputy Prime Minister title and the linked Finance/Agriculture succession (issue #4).
 - People can carry a birth date and a source for each biographical value (Hebrew name, birth and death dates) in
