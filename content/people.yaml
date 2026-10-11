@@ -6,7 +6,8 @@
 # living: false is set only after confirming each person's death date (en.wikipedia.org infobox; 2026-10-09 for the
 # 1948-49 cabinet, 2026-10-10 for people added in M3).
 # Portraits: public-domain files fetched with license check (promo/CREDITS.md).
-# Not modelled: deputy ministers (Efrati, Shari, Kahana) and Kaplan's Deputy Prime Minister title (research notes 1c, 1e).
+# Deputy ministers (Efrati, Shari, Kahana) and Kaplan's Deputy Prime Minister title are historical-only titles
+# (offices.yaml `historical_only: true`); sources in research_notes/M3 content 1950-51/deputy-titles.md.
 # portrait.focus_y: the face centre's height as a share of the picture (0 top, 1 bottom), measured on each picture;
 # the event card keeps it in view (playtest 2, P2-5).
 people:
@@ -36,6 +37,9 @@ people:
   - id: kaplan
     name: Eliezer Kaplan
     living: false
+    # Died in office on 13 July 1952 (en.wikipedia.org/wiki/Eliezer_Kaplan and he.wikipedia.org/wiki/אליעזר_קפלן,
+    # checked 2026-10-11).
+    died: 1952-07-13
     party: mapai
     competence: 8
     loyalty: 9
@@ -276,8 +280,8 @@ people:
     competence: 8
     loyalty: 8
     offices:
-      - { office: agriculture_minister, from: 1951-10-08, to: 1952-06-25, sources: *june_1952 }
-      - { office: finance_minister, from: 1952-06-25, to: 1952-12-24, sources: *june_1952 }
+      - { office: agriculture_minister, from: 1951-10-08, to: 1952-06-25, sources: [*third_en, *third_he, { url: "https://fs.knesset.gov.il/2/Plenum/2_ptm_250662.pdf", checked: 2026-10-11 }] }
+      - { office: finance_minister, from: 1952-06-25, sources: *june_1952 }
     status: fact-checked
   - id: dinur
     name: Ben-Zion Dinur
@@ -316,8 +320,8 @@ people:
     competence: 7
     loyalty: 8
     offices:
-      - { office: minister_without_portfolio, from: 1951-10-08, to: 1952-06-25, sources: *june_1952 }
-      - { office: agriculture_minister, from: 1952-06-25, to: 1952-12-24, sources: *june_1952 }
+      - { office: minister_without_portfolio, from: 1951-10-08, to: 1952-06-25, sources: [*third_en, *third_he, { url: "https://fs.knesset.gov.il/2/Plenum/2_ptm_250662.pdf", checked: 2026-10-11 }] }
+      - { office: agriculture_minister, from: 1952-06-25, sources: *june_1952 }
     status: fact-checked
   - id: weizmann
     name: Chaim Weizmann

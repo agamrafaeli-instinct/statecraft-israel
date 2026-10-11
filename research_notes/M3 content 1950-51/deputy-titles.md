@@ -16,11 +16,11 @@ flag restricts a title, not a person.
 
 | Person | Title | Interval [from, to) | Basis |
 | --- | --- | --- | --- |
-| Yosef Efrati | Deputy Agriculture |26 Feb 1951-8 Oct 1951| Official mirrored role rows 21964/21965; notification agenda 26 Feb|
-| Yosef Efrati | Deputy Agriculture |4 Nov 1951-25 Jun 1952| Official mirrored role row 21963; deputy appointments agenda 4 Nov|
-| Reuven Shari | Deputy Transport |2 Apr 1951-8 Oct 1951| Notification agenda 2 Apr and 1951 law; biography agrees|
-| Kalman Kahana | Deputy Education and Culture |4 Nov 1951-24 Dec 1952| Official mirrored role row 4586; deputy appointments agenda 4 Nov|
-| Eliezer Kaplan | Deputy Prime Minister |25 Jun 1952-13 Jul 1952| Primary 25 Jun 1952 proceeding and mirrored role row 3845; included with minimal 1952 succession fix|
+| Yosef Efrati | Deputy Agriculture | 26 Feb 1951-8 Oct 1951 | Official mirrored role rows 21964/21965; notification agenda 26 Feb |
+| Yosef Efrati | Deputy Agriculture | 4 Nov 1951-25 Jun 1952 | Official mirrored role row 21963; deputy appointments agenda 4 Nov |
+| Reuven Shari | Deputy Transport | 2 Apr 1951-8 Oct 1951 | Notification agenda 2 Apr and 1951 law; biography agrees |
+| Kalman Kahana | Deputy Education and Culture | 4 Nov 1951-24 Dec 1952 | Official mirrored role row 4586; deputy appointments agenda 4 Nov |
+| Eliezer Kaplan | Deputy Prime Minister | 25 Jun 1952-13 Jul 1952 | Primary 25 Jun 1952 proceeding and mirrored role row 3845; included with minimal 1952 succession fix |
 
 The role-table rows split at 20 Aug 1951 when the Knesset changes. Adjacent pieces of the same office
 are joined, without creating a break in the appointment. Efrati's 9 Jul 1952 reappointment is outside the
@@ -39,7 +39,7 @@ Downloaded and inspected:
 - Session agenda: https://production.oknesset.org/pipelines/data/plenum/kns_plmsessionitem/kns_plmsessionitem.csv
 - Transcript links: https://production.oknesset.org/pipelines/data/plenum/kns_documentplenumsession/kns_documentplenumsession.csv
 
-Resolved PersonIDs 2161  Efrati, 2666  Shari, 2404  Kahana, 2590 Kaplan. Position 40 is deputy minister, 50 Deputy PM.
+Resolved PersonIDs 2161 Efrati, 2666 Shari, 2404 Kahana, 2590 Kaplan. Position 40 is deputy minister, 50 Deputy PM.
 Roles/factions corroborate Mapai for Efrati/Shari and Poalei Agudat Yisrael for Kahana in the relevant terms.
 These are community-hosted mirrors of official records, not an independent historical source.
 
@@ -48,9 +48,9 @@ acts within the minister's allocated matters/powers, and does not diminish the m
 https://fs.knesset.gov.il/1/law/1_lsr_208918.pdf
 
 Notification agenda joins:
-- 26 Feb 1951 session 157470,item 492460:appointment of deputy Agriculture minister.
--2 Apr 1951 session 157481,item 492521:Transport minister notification of deputy appointment.
--4 Nov 1951 session 489635,item 492690:Justice minister notification of deputy appointments.
+- 26 Feb 1951 session 157470, item 492460: appointment of deputy Agriculture minister.
+- 2 Apr 1951 session 157481, item 492521: Transport minister notification of deputy appointment.
+- 4 Nov 1951 session 489635, item 492690: Justice minister notification of deputy appointments.
 
 The exact underlying transcripts were located but could not be read due to geographic-unavailable responses:
 https://fs.knesset.gov.il/1/Plenum/1_ptm_250070.pdf
@@ -72,8 +72,11 @@ https://en.wikipedia.org/wiki/Kalman_Kahana
   is made.
 - Kahana's Hebrew biography starts 8 Oct 1951 and the Education ministry table ends 18 Sep 1952. The
   official mirrored role data gives 4 Nov 1951-24 Dec 1952, agreeing with the Third Government table.
-  The 4 Novnotification supports the later start; an end-date transcript remains unchecked.
-- Do not repeat the English Shari biography's"first ever deputy"claim: Efrati's formal record starts earlier.
+  The 4 Nov notification supports the later start; an end-date transcript remains unchecked.
+- Kaplan's Deputy PM start: en.wikipedia.org/wiki/Third_government_of_Israel lists him as Deputy Prime Minister from
+  8 Oct 1951, as does facts.md ("Addendum (2026-10-10): Third Government portfolios"). The 25 Jun 1952 proceeding, the mirrored role row
+  and en.wikipedia.org/wiki/Deputy_Prime_Minister_of_Israel (25 Jun-13 Jul 1952) give the later date. Use 25 Jun 1952.
+- Do not repeat the English Shari biography's "first ever deputy" claim: Efrati's formal record starts earlier.
 
 ## Kaplan and 1952 scope
 
@@ -82,9 +85,11 @@ as Deputy PM, Eshkol takes Finance and Naftali takes Agriculture:
 https://fs.knesset.gov.il/2/Plenum/2_ptm_250662.pdf
 The mirrored roles give Deputy PM 25 Jun-13 Jul 1952. Before this change, content left Kaplan in Finance and
 Eshkol in Agriculture open-ended after 1951. Adding Kaplan's title alone does not fix those 1952 senior
-portfolio gaps. The owner chose the minimal 25 June 1952 succession fix for #4. Finance/Agriculture terms are bounded
-at 24 December 1952 where the mirrored Third Government roles end; the rest of #26 remains separate.
+portfolio gaps. This PR proposes the minimal 25 June 1952 succession fix for #4. The new Finance/Agriculture terms stay open-ended,
+like the rest of the file, until #26 adds the Fourth Government (24 December 1952); the rest of #26 remains separate.
+The same day Justice passed from Dov Yosef to Haim Cohn, and Lavon became Minister without Portfolio on 17 Aug 1952
+(en.wikipedia.org/wiki/Third_government_of_Israel); both are left to #26.
 No new Development office, government records or later terms are added.
 
-The existing 1950/1952 goldens end 27 February 1950 and 27 February 1952, before thisJunechange.
+The existing 1950/1952 goldens end 27 February 1950 and 27 February 1952, before this June change.
 Both hashes stay unchanged. The new Cabinet boundary test checks the later rollover directly.

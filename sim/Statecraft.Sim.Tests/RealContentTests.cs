@@ -78,6 +78,9 @@ public class RealContentTests
         Assert.Equal("kaplan", Offices.Holder(C, "deputy_prime_minister", end.AddDays(-1))?.Id);
         Assert.Null(Offices.Holder(C, "deputy_prime_minister", end));
         Assert.Null(Offices.Holder(C, "minister_without_portfolio", end));
+        // The new Finance/Agriculture terms stay open until #26 adds the Fourth Government (24 December 1952).
+        Assert.Equal("eshkol", Offices.Holder(C, "finance_minister", new DateTime(1952, 12, 24))?.Id);
+        Assert.Equal("naftali", Offices.Holder(C, "agriculture_minister", new DateTime(1952, 12, 24))?.Id);
         var state = Simulation.NewGame(C, 42, Mode.Historical);
         state.Date = change.AddDays(-1);
         Assert.Equal(0.9, EffectsSystem.Multiplier(C, state, "agriculture_minister") /
@@ -87,6 +90,8 @@ public class RealContentTests
             EffectsSystem.BudgetFactor(state, "agriculture_minister"), 10);
         Assert.Equal("kaplan", Cabinet.Holder(C, state, "minister_without_portfolio")?.Id);
         Assert.DoesNotContain(Cabinet.Lineup(C, state), seat => seat.Office.Id == "deputy_prime_minister");
+        state.Date = end;
+        Assert.Equal("Eliezer Kaplan died on " + PlayerText.Date(end), Cabinet.Check(C, state, "finance_minister", "kaplan"));
     }
 
     [Fact]
