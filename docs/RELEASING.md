@@ -95,10 +95,15 @@ assets or content for commercial use. Finish the release gates above first; the 
 
 - [ ] Capture at least five gameplay screenshots, minimum 1920 x 1080, 16:9, from the real release build, not concept art,
   pre-rendered cinematic stills or marketing images. Record the build commit and zip SHA-256 with the capture date.
-  The README shots at 1640 x 920 are not large enough for this slot. Show the actual UI when useful; do not pass off
+  The README build shots (`docs/images/build-m3-*.jpg`, 1568 x 752 and not 16:9) do not meet this minimum. Show the actual UI when useful; do not pass off
   `promo/final/03-gameplay-1936.png` or the AI likenesses in promo/final/04 and 08 as gameplay. Review each screenshot's
   age-suitability flag individually; never mark a sensitive scene suitable for all ages just to gain placement.
-- [ ] Prepare a trailer from the real build, not the M2 recruiting flythrough or concept-art target. The deterministic
+  When at least four genuinely qualify, mark them suitable for all ages so the game can appear in those placements.
+- [ ] Steam requires a trailer and recommends that the first one be mostly gameplay; this
+  project's real-build-only rule is stricter. Prepare a trailer from the real build, not the M2 recruiting flythrough
+  or concept-art target. Upload the highest resolution available, up to 1920 x 1080, at 30/29.97 or 60/59.94 fps
+  and 5,000+ Kbps; H.264 video with AAC audio in .mp4 is preferred. Steam also accepts .mov and .wmv containers.
+  Do not attempt release while a trailer is still encoding. The deterministic
   1920 x 1080, 60 fps capture and draft cut are the separate trailer part of #45, still pending; this checklist does
   not provide a capture script or a finished trailer. Record the build/seed and capture settings with the cut.
 - [ ] Complete all Steam Content Survey sections against the build and store page (OWNER STEP): general content,
@@ -119,3 +124,4 @@ Official Steam sources checked 11 October 2026; re-check them before submission:
 - [Graphical assets overview](https://partner.steamgames.com/doc/store/assets).
 - [Store assets and screenshots](https://partner.steamgames.com/doc/store/assets/standard).
 - [Content Survey](https://partner.steamgames.com/doc/gettingstarted/contentsurvey).
+- [Trailers](https://partner.steamgames.com/doc/store/trailer).
