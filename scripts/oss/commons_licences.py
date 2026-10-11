@@ -19,7 +19,8 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parents[2]
 UA = {"User-Agent": "statecraft-israel-licence-audit/1.0 (https://github.com/eyalgolan/statecraft-israel)"}
-US_STATUS = ("PD-US", "PD-1996", "Cc-zero")
+US_STATUS = ("PD-US", "Cc-zero")
+US_1996_TEMPLATES = {"PD-1996", "PD-1996-text"}
 # Portrait files with no people.yaml record (promo/CREDITS.md lists Dayan as CC0).
 EXTRA = [("promo/ref/people/Moshe_Dayan_1962_CC0.jpg",
           "https://commons.wikimedia.org/wiki/File:Moshe_Dayan_met_mgr._A.C._Ramselaar_(cropped).jpg")]
@@ -35,7 +36,9 @@ def rule_for(path: str, source: str, licence_short: str, templates: list[str], a
             "artist": re.sub(r"<[^>]+>", "", html.unescape(artist)).strip()}
     if licence == "unknown":
         rule.update(status="owner-verify", note=f"Commons licence '{licence_short}' is not public domain or CC0")
-    elif not any(n.startswith(US_STATUS) for n in names):
+    elif any(n == "Not-PD-US-URAA" or n.startswith("Not-PD-US-URAA/") for n in names):
+        rule.update(status="owner-verify", note="Commons explicitly warns Not-PD-US-URAA: US copyright restored")
+    elif not any(n.startswith(US_STATUS) or n in US_1996_TEMPLATES for n in names):
         rule.update(status="owner-verify", note="no explicit US status template on the Commons page")
     return rule
 
@@ -47,7 +50,7 @@ def _commons(title: str, session) -> tuple[str, list[str], str]:
     page = next(iter(j["query"]["pages"].values()))
     meta = (page.get("imageinfo") or [{}])[0].get("extmetadata", {})
     templates = [t["title"] for t in page.get("templates", [])
-                 if re.match(r"Template:(PD-|Cc-zero|Cc-by)", t["title"], re.I)]
+                 if re.match(r"Template:(PD-|Not-PD-US-URAA(?:/|$)|Cc-zero|Cc-by)", t["title"], re.I)]
     return meta.get("LicenseShortName", {}).get("value", "UNKNOWN"), templates, meta.get("Artist", {}).get("value", "")
 
 
