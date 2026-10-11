@@ -73,9 +73,11 @@ with facts from the real review; never commit this unfilled example as a sign-of
 # status remains at its existing value until the M4 implementation supports the transition.
 ```
 
-Comments are not a machine-enforced certificate. They preserve an audit trail without adding unsupported keys such as
-`reviewed_by` or `reviewed_on`. Adding even comments changes the content hash: run the tests and follow the maintainer's
-[golden rebaseline process](WRITING_EVENTS.md#a-golden-hash-change), not an assumption that comment-only edits are hash-free.
+Comments are not a machine-enforced certificate: anyone can edit them, and no test reads them. The reviewer's PR comment
+is the record; the YAML comment only points to it, without adding unsupported keys such as `reviewed_by` or `reviewed_on`.
+A comment-only edit still changes the content hash (`ContentLoader` hashes the text of every content file), so a save made
+before it loads with the "different game content" warning. It does not change any parsed value, so the golden hashes in
+[determinism.md](determinism.md) stay the same. If they move, the edit changed more than comments: find out what before going on.
 
 ## Corrections, disagreements and changed content
 
