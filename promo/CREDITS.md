@@ -41,3 +41,8 @@ Rain-gauge data: Israel Meteorological Service (השירות המטאורולו�
 1948 settlements (tools/README.md has no settlement wording; this is the source note of
 content/map/settlements_1948.yaml): coordinates from the Wikipedia API (prop=coordinates); founding years from the
 cited article's text. Each settlement's source URLs and check dates are listed in that file.
+
+## New portrait sources (checked 2026-10-11)
+- Ben-Gurion: cropped from NARA 200318, 8 May 1951, `PD-USGov`. https://commons.wikimedia.org/wiki/File:Photograph_of_President_Truman_in_the_Oval_Office%2C_evidently_receiving_a_Menorah_as_a_gift_from_the_Prime_Minister_of..._-_NARA_-_200318.jpg . Independent record: https://www.trumanlibrary.gov/photograph-records/73-3680 . Original previous GPO reference remains retained, not relabelled.
+- Golda: cropped from Willem van de Poll / Nationaal Archief 255-4314, catalogued 1964, `Cc-zero`. https://commons.wikimedia.org/wiki/File:Golda_Meir%2C_minister_van_buitenlandse_zaken_van_Israel%2C_Bestanddeelnr_255-4314.jpg . Outside the 1948-56 game era.
+- These crops have not yet received the human likeness review required by #6/#30.
