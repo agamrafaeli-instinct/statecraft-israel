@@ -98,3 +98,10 @@ rules or content, treat it as a determinism bug.
 | playtest 1 E fix 1 | 1952 | `f78fc68d` | same |
 | playtest 1 E fix 1 | 1950 | `71e9904d` | 1948 war-period events revised after review: windows open on the turn before each decision, Yoav becomes the Hebron-hills decision, follow-ups use `requires`, Bernadotte's shared standing hit, security deltas halved, the elections a one-option card in January, two events added (Jerusalem cease-fire, Rhodes talks); still ends 1950-02-27, turn 35 |
 | playtest 1 E fix 1 | 1952 | `73590e32` | same; still ends 1952-02-27, turn 43 |
+
+### Issue #4: historical titles and June 1952 succession
+
+Historical-only titles create no appointment slots or gameplay responsibilities. The sourced
+25 June 1952 Finance/Agriculture rollover changes gameplay from that day, but both pinned
+playthroughs finish earlier (27 February 1950 and 27 February 1952). Their hashes remain unchanged.
+`KaplanDeputyPrimeMinisterTitleFollowsHisDepartureFromFinance` checks the later office boundaries.
