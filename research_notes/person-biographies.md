@@ -13,7 +13,7 @@ Checked 11 October 2026. Scope: all 29 existing people in `content/people.yaml`,
 | rosen | פנחס רוזן | 1887-05-01 | 1978-05-03 | https://en.wikipedia.org/wiki/Pinchas_Rosen |
 | bentov | מרדכי בנטוב | 1900-03-28 | 1985-01-18 | https://en.wikipedia.org/wiki/Mordechai_Bentov |
 | sheetrit | בכור-שלום שטרית | 1895-01-20 | 1967-01-28 | https://en.wikipedia.org/wiki/en:Bechor-Shalom_Sheetrit |
-| maimon | יהודה לייב מימון | Unresolved | 1962-07-10 | https://en.wikipedia.org/wiki/Yehuda_Leib_Maimon |
+| maimon | יהודה לייב מימון | 1875-12-11 | 1962-07-10 | https://en.wikipedia.org/wiki/Yehuda_Leib_Maimon |
 | bernstein | פרץ ברנשטיין | 1890-06-12 | 1971-03-21 | https://en.wikipedia.org/wiki/Peretz_Bernstein |
 | remez | דוד רמז | 1886-05-23 | 1951-05-19 | https://en.wikipedia.org/wiki/David_Remez |
 | levin | יצחק-מאיר לוין | 1893-01-30 | 1971-08-07 | https://en.wikipedia.org/wiki/Yitzhak-Meir_Levin |
@@ -39,7 +39,7 @@ Checked 11 October 2026. Scope: all 29 existing people in `content/people.yaml`,
 - Ben-Gurion death: https://m.knesset.gov.il/EN/About/Pages/bg.aspx .
 - Dinur's exact birth date also appears at https://he.wikipedia.org/wiki/%D7%91%D7%9F_%D7%A6%D7%99%D7%95%D7%9F_%D7%93%D7%99%D7%A0%D7%95%D7%A8 .
 - Existing Kaplan death sources are preserved, including the Hebrew page.
-- Maimon birth is deliberately absent, so this is not yet a completed #1 pass. English Wikipedia says 1 January 1875. Hebrew Wikipedia says 11 December 1875 and 12 Kislev 5636: https://he.wikipedia.org/wiki/%D7%99%D7%94%D7%95%D7%93%D7%94_%D7%9C%D7%99%D7%99%D7%91_%D7%A4%D7%99%D7%A9%D7%9E%D7%9F_%D7%9E%D7%99%D7%9E%D7%95%D7%9F . Wikidata Q2382713 also gives 11 December. The Congress for Jewish Culture biographical dictionary gives 12 December 1875: https://www.congressforjewishculture.org/people/2918/Maimun-Yehuda-Leib-Hacohen_1875-1962 . No exact primary birth record was recovered. Do not count related Wikipedia/Wikidata entries as independent corroboration.
+- Maimon birth is set to 11 December 1875, following the contributor's decision to use the Hebrew biography. The other reported dates are preserved here rather than silently discarded. English Wikipedia says 1 January 1875. Hebrew Wikipedia says 11 December 1875 and 12 Kislev 5636: https://he.wikipedia.org/wiki/%D7%99%D7%94%D7%95%D7%93%D7%94_%D7%9C%D7%99%D7%99%D7%91_%D7%A4%D7%99%D7%A9%D7%9E%D7%9F_%D7%9E%D7%99%D7%9E%D7%95%D7%9F . Wikidata Q2382713 also gives 11 December. The Congress for Jewish Culture biographical dictionary gives 12 December 1875: https://www.congressforjewishculture.org/people/2918/Maimun-Yehuda-Leib-Hacohen_1875-1962 . No exact primary birth record was recovered; the chosen source is the Hebrew Wikipedia biography, not a newly discovered primary record. Do not count related Wikipedia/Wikidata entries as independent corroboration.
 - A contemporary JTA obituary says he was 87 but supplies no exact birth date; that age cannot settle the conflict: https://www.jta.org/archive/rabbi-maimon-first-israel-minister-for-religious-affairs-dies-was-87 .
 
 No later death date is used to invent a term end. This pass depends on #167's open-term loader boundary. Deaths after February 1952 can affect later simulation dates even though the existing Hash1950/Hash1952 tests remain unchanged.
