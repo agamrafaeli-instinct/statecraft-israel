@@ -48,7 +48,8 @@ def test_empty_disclosure_is_honest():
 
 def test_checked_in_output_matches_current_manifests():
     m = module()
-    assert (ROOT / 'docs/ai-disclosure.md').read_text() == m.render(m.read_manifests(ROOT))
+    assert (ROOT / 'docs/ai-disclosure.md').read_text(encoding='utf-8') == m.render(m.read_manifests(ROOT)), \
+        'docs/ai-disclosure.md is stale: run uv run scripts/oss/ai_disclosure.py --output docs/ai-disclosure.md'
 
 
 def test_incomplete_flagged_rule_fails():
