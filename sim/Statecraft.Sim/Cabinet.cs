@@ -55,7 +55,7 @@ namespace Statecraft.Sim
 
         /// <summary>Every office that exists on the state's date, in offices.yaml order, with its holder (null = vacant).</summary>
         public static IReadOnlyList<Seat> Lineup(Content c, GameState s) =>
-            c.Offices.Where(o => !o.Until.HasValue || s.Date < o.Until.Value)
+            c.Offices.Where(o => !o.HistoricalOnly && (!o.Until.HasValue || s.Date < o.Until.Value))
                 .Select(o => new Seat(o, Holder(c, s, o.Id), Active(c, s, o.Id, s.Date) != null))
                 .ToList();
 
@@ -70,6 +70,7 @@ namespace Statecraft.Sim
         {
             var office = c.Offices.FirstOrDefault(o => o.Id == officeId);
             if (office == null) return "That office does not exist in this game";
+            if (office.HistoricalOnly) return $"{office.Title} is a historical title, not an appointable office";
             if (office.Until.HasValue && s.Date >= office.Until.Value)
                 return $"The office of {office.Title} was abolished on {PlayerText.Date(office.Until.Value)}";
             if (officeId == "prime_minister") return "You are the Prime Minister: that office is not yours to fill";
