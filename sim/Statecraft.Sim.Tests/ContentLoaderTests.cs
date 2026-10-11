@@ -17,6 +17,27 @@ public class ContentLoaderTests
     }
 
     [Fact]
+    public void PersonLifeMetadataHasSourcesPerFieldAndRemainsOptional()
+    {
+        var yaml = Fixture.Files["people.yaml"].Replace("    name: Pm One\n", @"    name: Pm One
+    name_he: דמות לדוגמה
+    born: 1900-01-01
+    biography_sources:
+      name_he: [{ url: 'https://example.org/name', checked: 2026-10-11 }]
+      born: [{ url: 'https://example.org/birth', checked: 2026-10-11 }]
+");
+        var c = ContentLoader.Load(Fixture.Write(new Dictionary<string, string> { ["people.yaml"] = yaml }));
+        var person = c.People[0];
+        Assert.Equal("דמות לדוגמה", person.NameHe);
+        Assert.Equal(new DateTime(1900, 1, 1), person.Born);
+        Assert.Equal("https://example.org/name", person.BiographySources["name_he"][0].Url);
+        Assert.Equal("https://example.org/birth", person.BiographySources["born"][0].Url);
+        Assert.Null(c.People[1].Born);
+        Assert.Empty(c.People[1].BiographySources);
+        Assert.Null(person.Died);
+    }
+
+    [Fact]
     public void UnknownPartyInSeatsNamesFileAndField()
     {
         var bad = Fixture.Files["legislatures.yaml"].Replace("beta: 6", "gamma: 6");
