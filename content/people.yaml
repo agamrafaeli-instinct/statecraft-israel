@@ -13,6 +13,13 @@
 people:
   - id: ben_gurion
     name: David Ben-Gurion
+    name_he: דוד בן-גוריון
+    born: 1886-10-16
+    died: 1973-12-01
+    biography_sources:
+      name_he: &bg_bio [{ url: "https://en.wikipedia.org/wiki/David_Ben-Gurion", checked: 2026-10-11 }]
+      born: *bg_bio
+      died: [{ url: "https://en.wikipedia.org/wiki/David_Ben-Gurion", checked: 2026-10-11 }, { url: "https://m.knesset.gov.il/EN/About/Pages/bg.aspx", checked: 2026-10-11 }]
     living: false
     party: mapai
     competence: 9
