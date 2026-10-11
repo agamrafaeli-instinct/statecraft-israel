@@ -8,6 +8,7 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 ## [Unreleased]
 
 ### Added
+- A portrait of Yitzhak Ben-Zvi: a crop of Harry Pot's 1958 Anefo photo (CC0; later than the Founding slice; #6).
 - A portrait of Chaim Weizmann: a crop of a Bain News Service photo, ca. 1915-1920, from the Library of Congress
   (US public domain, PD-Bain; an earlier likeness than his presidency; #6).
 - Hebrew UI translation data with key and format-token checks; not yet enabled in the game (#12).
