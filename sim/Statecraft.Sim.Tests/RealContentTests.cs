@@ -17,16 +17,23 @@ public class RealContentTests
     static readonly DateTime Checked = new DateTime(2026, 10, 9);
 
     [Fact]
-    public void CurrentPeopleHaveSourcedBiographyValuesExceptUnresolvedMaimonBirth()
+    public void MaimonBirthUsesHebrewBiographyDateAndSource()
+    {
+        var p = C.People.Single(p => p.Id == "maimon");
+        Assert.Equal(new DateTime(1875, 12, 11), p.Born);
+        Assert.Contains(p.BiographySources["born"], source => source.Url == "https://he.wikipedia.org/wiki/יהודה_לייב_פישמן_מימון" && source.Checked == new DateTime(2026, 10, 11));
+    }
+
+    [Fact]
+    public void CurrentPeopleHaveSourcedBiographyValues()
     {
         Assert.Equal(29, C.People.Count);
         foreach (var p in C.People)
         {
             Assert.False(string.IsNullOrWhiteSpace(p.NameHe));
             Assert.NotNull(p.Died);
-            if (p.Id == "maimon") Assert.Null(p.Born);
-            else Assert.NotNull(p.Born);
-            foreach (var key in p.Id == "maimon" ? new[] { "name_he", "died" } : new[] { "name_he", "born", "died" })
+            Assert.NotNull(p.Born);
+            foreach (var key in new[] { "name_he", "born", "died" })
             {
                 Assert.True(p.BiographySources.TryGetValue(key, out var sources), $"{p.Id}: missing biography_sources.{key}");
                 Assert.NotEmpty(sources);
