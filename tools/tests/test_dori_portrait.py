@@ -1,4 +1,4 @@
-"""The one-photo #6 batch keeps source, runtime and explicit US status together."""
+"""The one-photo #6 batch keeps source, runtime and CC0 status together."""
 from pathlib import Path
 import re
 
@@ -13,7 +13,7 @@ def portrait():
     return next(p for p in yaml.safe_load((ROOT / "content/people.yaml").read_text())["people"] if p["id"] == "dori")["portrait"]
 
 
-def test_dori_has_legal_portrait_with_explicit_us_provenance():
+def test_dori_has_legal_portrait_with_cc0_provenance():
     p = portrait()
     assert p["license"] == "CC0" and p["source"] == SOURCE
     assert p["focus_y"] == 0.3
