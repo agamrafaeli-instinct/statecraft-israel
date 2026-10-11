@@ -82,6 +82,7 @@ options:
     {
         var ex = Assert.Throws<ContentException>(() => Load(horizon, ev: OpenEvent.Replace("from: 1948-06-01", from)));
         Assert.Equal("events[horizon_event].to", ex.Field);
+        Assert.Contains("starts on or after rules.yaml open_events_until (1948-06-01)", ex.Message);
     }
 
     [Fact]

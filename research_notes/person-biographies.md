@@ -12,7 +12,7 @@ Checked 11 October 2026. Scope: all 29 existing people in `content/people.yaml`,
 | gruenbaum | יצחק גרינבוים | 1879-11-24 | 1970-09-07 | https://en.wikipedia.org/wiki/Yitzhak_Gruenbaum |
 | rosen | פנחס רוזן | 1887-05-01 | 1978-05-03 | https://en.wikipedia.org/wiki/Pinchas_Rosen |
 | bentov | מרדכי בנטוב | 1900-03-28 | 1985-01-18 | https://en.wikipedia.org/wiki/Mordechai_Bentov |
-| sheetrit | בכור-שלום שטרית | 1895-01-20 | 1967-01-28 | https://en.wikipedia.org/wiki/en:Bechor-Shalom_Sheetrit |
+| sheetrit | בכור-שלום שטרית | 1895-01-20 | 1967-01-28 | https://en.wikipedia.org/wiki/Bechor-Shalom_Sheetrit |
 | maimon | יהודה לייב מימון | 1875-12-11 | 1962-07-10 | https://en.wikipedia.org/wiki/Yehuda_Leib_Maimon (name/death); https://he.wikipedia.org/wiki/יהודה_לייב_פישמן_מימון (birth) |
 | bernstein | פרץ ברנשטיין | 1890-06-12 | 1971-03-21 | https://en.wikipedia.org/wiki/Peretz_Bernstein |
 | remez | דוד רמז | 1886-05-23 | 1951-05-19 | https://en.wikipedia.org/wiki/David_Remez |

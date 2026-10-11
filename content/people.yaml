@@ -195,7 +195,7 @@ people:
     born: 1895-01-20
     died: 1967-01-28
     biography_sources:
-      name_he: &sheetrit_bio [{ url: "https://en.wikipedia.org/wiki/en:Bechor-Shalom_Sheetrit", checked: 2026-10-11 }]
+      name_he: &sheetrit_bio [{ url: "https://en.wikipedia.org/wiki/Bechor-Shalom_Sheetrit", checked: 2026-10-11 }]
       born: *sheetrit_bio
       died: *sheetrit_bio
     living: false

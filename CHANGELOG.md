@@ -7,9 +7,10 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ## [Unreleased]
 
-- Fill Hebrew names and sourced life dates for all 29 people; declare an explicit M3 horizon for otherwise-open event windows so complete biographies integrate with death-aware holders.
-
 ### Added
+- Hebrew names and sourced birth and death dates for all 29 people (issue #1).
+- `rules.yaml` can set `open_events_until`, an end date for events that have no `to`; the current content uses
+  1952-01-01. Without it, an open event still needs an office holder forever, which complete death dates rule out.
 - Historical-only deputy titles and sourced 1951 terms; Kaplan's June 1952 Deputy Prime Minister title and the linked Finance/Agriculture succession (issue #4).
 - People can carry a birth date and a source for each biographical value (Hebrew name, birth and death dates) in
   `people.yaml`; the loader rejects unknown source keys, sources without a `url` or `checked` date, and impossible birth

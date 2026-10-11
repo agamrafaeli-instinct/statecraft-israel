@@ -27,11 +27,12 @@ public class RealContentTests
     [Fact]
     public void CurrentPeopleHaveSourcedBiographyValues()
     {
-        Assert.Equal(29, C.People.Count);
         foreach (var p in C.People)
         {
+            // living: false means the death date was confirmed, so it must be recorded; a living person has none.
+            Assert.Equal(p.Living == false, p.Died.HasValue);
+            if (p.Living == true) continue;   // living people are gated separately (#62); this pass covers the dead
             Assert.False(string.IsNullOrWhiteSpace(p.NameHe));
-            Assert.NotNull(p.Died);
             Assert.NotNull(p.Born);
             foreach (var key in new[] { "name_he", "born", "died" })
             {

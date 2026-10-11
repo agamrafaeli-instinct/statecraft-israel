@@ -55,7 +55,6 @@ Rules the loader enforces:
   values are unchanged. Without this setting, open windows still require indefinite coverage. This is a
   game-content boundary, not a historical event end or an exception to death eligibility. The current M3
   content uses `1952-01-01`; extend it as later events and office coverage are authored.
-
 - If the window has already closed when the event reaches the player (it can fire late), the names are filled in for
   the last day of the window.
 
