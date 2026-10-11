@@ -1,5 +1,9 @@
 # Game rules. Values are game balance, except where a comment cites a source.
 start: 1948-05-15                 # first day covered by the CBS 1948 immigration series (aliyah.yaml)
+# Explicit authoring horizon for otherwise-open event windows in the M3 content range (GoldenRun.Until1952).
+# Game design, not a historical end date: validation, late firing and pending text all use this exclusive bound.
+# Extend it as later events/holders are authored; death eligibility itself is never bounded here.
+open_events_until: 1952-01-01
 start_rung: 5                     # the war is under way when the slice opens
 attention_per_turn: 4
 attention_cost: { set_policy: 1, allocate_budget: 2, choose_event_option: 1, set_mobilization: 1, security_order: 1, appoint: 2, map_action: 1 }
