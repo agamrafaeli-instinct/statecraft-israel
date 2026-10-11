@@ -22,6 +22,8 @@ The Transition Law, 1949, sections 1-2, calls the legislature the Knesset, the C
 
 Finance Minister Eliezer Kaplan's 1949/50 budget speech explicitly introduces the first whole-year budget and asks the Knesset to give the Finance Committee authority to approve the defence budget. This is a primary speech reproduced in his collected writings, not a roll-call or enacted-law text: https://benyehuda.org/read/34722 .
 
+Official errata independently corroborate that the 1949/50 Budget Law was published in *Sefer HaHukim* 23 on 9 September 1949, citing corrections to pages 209, 215 and 216: https://fs.knesset.gov.il/1/law/1_lsr_ec_317740.pdf . The errata establish publication and the law's existence, not its full fiscal-date clause, passage date or vote tally. The full annual law remains blocked by source access. No corrected appropriation amount is imported into game data. Readable official text checked 11 October 2026; scan pixels were not available here.
+
 The First Knesset's sitting 159 record shows the 1950/51 budget in second and third readings, with objections to ministry allocations voted on and rejected and committee-text sections adopted. The portion read includes Welfare, Labour and Immigration. The same PDF ends with the summaries of sittings 156-159. Sitting 159 (14 Tammuz 5710, 29 June 1950) records that the expenditure budget and then the 1950/51 Budget Law itself were adopted in third reading in the Finance Committee's wording. The summary gives no tally, so the final whole-budget margin is still open: https://fs.knesset.gov.il/1/Plenum/1_ptm_250044.pdf . (Summary page checked against the page image in review, 11 October 2026.) Rejected opposition amendments are not a failed government budget.
 
 ### The 1951/52 annual law
@@ -41,7 +43,7 @@ Second Knesset sitting 218, 26 March 1953, records the Finance Committee chair, 
 | Period | Evidence read | Missing before #3 can close |
 | --- | --- | --- |
 | 1948 to March 1949 | Council statutory authority; July-December 1948 budget approved 28-3, 1 abstaining, on 14 October 1948; January-March proposal described by official history; election appropriation | January-March general ordinance and proceedings |
-| 1949/50 | Kaplan's whole-year speech | Enacted budget law, fiscal dates, final passage record/tally |
+| 1949/50 | Kaplan's whole-year speech; official errata independently confirm published annual law, 9 September 1949 | Full enacted law/fiscal-date clause and final passage record/tally, blocked by source access |
 | 1950/51 | Second/third-reading ministry votes; third-reading passage of the Budget Law on 29 June 1950 (sitting summary) | Enacted law text, fiscal dates, final tally |
 | 1951/52 | Annual law, April-March dates, 31 December 1951 adoption footnote, interim laws identified | Final annual/interim vote records and tallies |
 | 1952/53 | Supplementary passage on 26 March 1953 | Original annual law and final vote margin |
@@ -59,3 +61,8 @@ The official PDF text was read through a readable fetch. Direct PDF downloads re
 ## Located but not fully recovered
 
 The official laws-as-enacted index lists the 1949/50 Budget Law at *Sefer HaHukim* 23, page 201, published 9 September 1949: https://main.knesset.gov.il/Activity/Legislation/Laws/pages/lawreshumot.aspx?fd=04%2F05%2F1948+00%3A00%3A00&pn=254&sb=publicationdate&so=d&st=lawreshumotbook&t=lawreshumot&td=25%2F06%2F2025+00%3A00%3A00 . It lists 1956/57 at *Budget Laws* 14, page 2, published 18 May 1956, and a second law at volume 15, page 130, published 31 May 1956: https://main.knesset.gov.il/Activity/Legislation/Laws/pages/lawreshumot.aspx?fd=04%2F05%2F1948+00%3A00%3A00&pn=210&ps=6071&sb=publicationdate&so=d&st=lawreshumotbook&t=lawreshumot&td=12%2F06%2F2018+00%3A00%3A00 . These are publication dates, not passage dates or vote margins. Readable retrieval exposed the rows without PDF targets, and the live index redirected to the official geo-unavailable page. Keep those annual texts open rather than guessing document URLs.
+
+
+## Follow-up access check, 11 October 2026
+
+The official 1948 sitting PDF redirects to the Knesset geo-unavailable page in this environment. A readable fetch still cuts before the final tally; the reviewer's scan-based tally above has not been independently rechecked here. The 1954/55 bill index at https://knesset.fyi/b/Oh3clq/%D7%97%D7%95%D7%A7-%D7%94%D7%AA%D7%A7%D7%A6%D7%99%D7%91-%D7%9C%D7%A9%D7%A0%D7%AA-1954-55-%D7%94%D7%A6%D7%A2%D7%94-1954 supplies primary links to https://fs.knesset.gov.il//2/plenum/2_ptm_250479.pdf and https://fs.knesset.gov.il//2/plenum/2_ptm_250805.pdf , but both return geo-unavailable through readable retrieval too. These are blocked-by-access source gaps, not evidence that passage or a tally is absent. The aggregator's timeline alone is not a verified final vote.
