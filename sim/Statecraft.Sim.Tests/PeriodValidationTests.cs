@@ -100,6 +100,27 @@ public class PeriodValidationTests
     }
 
     [Fact]
+    public void AnOpenTermStartingOnTheHoldersDeathIsALoadError()
+    {
+        // The later-death rule must not let an open term begin after its holder died.
+        var people = Fixture.Files["people.yaml"].Replace("    name: Def Two\n", "    name: Def Two\n    died: 1949-06-01\n")
+            .Replace("        from: 1949-01-01\n", "        from: 1949-06-01\n");
+        var ex = Assert.Throws<ContentException>(() => ContentLoader.Load(Fixture.Write(new Dictionary<string, string> { ["people.yaml"] = people })));
+        Assert.Equal("people.yaml", ex.File);
+        Assert.Equal("people[def_two].offices.defense_minister.from", ex.Field);
+        Assert.Contains("must be before 1949-06-01, the date of death", ex.Message);
+    }
+
+    [Fact]
+    public void WithNoGovernmentsAnOpenTermAfterDeathIsStillALoadError()
+    {
+        var people = Fixture.Files["people.yaml"].Replace("    name: Pm One\n", "    name: Pm One\n    died: 1973-12-01\n");
+        var ex = Assert.Throws<ContentException>(() => ContentLoader.Load(Fixture.Write(new Dictionary<string, string> { ["people.yaml"] = people, ["governments.yaml"] = "governments: []\n" })));
+        Assert.Equal("people.yaml", ex.File);
+        Assert.Equal("people[pm_one].offices.prime_minister.to", ex.Field);
+    }
+
+    [Fact]
     public void ATermRunningPastTheHoldersDeathIsALoadError()
     {
         var people = Fixture.Files["people.yaml"].Replace("    name: Def Two\n", "    name: Def Two\n    died: 1949-06-01\n")
