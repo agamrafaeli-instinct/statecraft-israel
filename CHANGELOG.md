@@ -7,6 +7,9 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ## [Unreleased]
 
+- Add a US-public-domain Zalman Shazar portrait crop (1966 White House photo, #6); likeness and period fit remain review items.
+
+
 ### Added
 - A local multi-size favicon for the WebGL page.
 - Hebrew names and sourced birth and death dates for all 29 people (issue #1).
