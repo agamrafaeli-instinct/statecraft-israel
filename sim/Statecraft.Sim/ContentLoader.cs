@@ -372,9 +372,10 @@ namespace Statecraft.Sim
                     foreach (var t in p.Offices.Where(t => t.Office == o.Id))
                         if (!t.To.HasValue || t.To.Value > o.Until!.Value)
                             throw new ContentException("people.yaml", $"people[{p.Id}].offices.{o.Id}.to", FormattableString.Invariant($"must be on or before {o.Until:yyyy-MM-dd}, when the office was abolished"));
+            var latestGovernmentStart = c.Governments.Max(g => g.From);
             foreach (var p in c.People.Where(p => p.Died.HasValue))
                 foreach (var t in p.Offices)
-                    if (!t.To.HasValue || t.To.Value > p.Died!.Value)
+                    if (t.To.HasValue ? t.To.Value > p.Died!.Value : p.Died!.Value < latestGovernmentStart)
                         throw new ContentException("people.yaml", $"people[{p.Id}].offices.{t.Office}.to", FormattableString.Invariant($"must be on or before {p.Died:yyyy-MM-dd}, the date of death"));
             foreach (var p in c.People)
                 for (int i = 0; i < p.Offices.Count; i++)
