@@ -8,6 +8,8 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 ## [Unreleased]
 
 ### Added
+- A portrait of Chaim Weizmann: a crop of a Bain News Service photo, ca. 1915-1920, from the Library of Congress
+  (US public domain, PD-Bain; an earlier likeness than his presidency; #6).
 - A portrait of Yaakov Dori: a crop of Willem van de Poll's 1949 Nationaal Archief photo (CC0; #6).
 - Hebrew UI translation data with key and format-token checks; not yet enabled in the game (#12).
 - A local multi-size favicon for the WebGL page.
