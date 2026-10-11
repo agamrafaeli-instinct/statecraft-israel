@@ -17,6 +17,25 @@ public class RealContentTests
     static readonly DateTime Checked = new DateTime(2026, 10, 9);
 
     [Fact]
+    public void CurrentPeopleHaveSourcedBiographyValuesExceptUnresolvedMaimonBirth()
+    {
+        Assert.Equal(29, C.People.Count);
+        foreach (var p in C.People)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(p.NameHe));
+            Assert.NotNull(p.Died);
+            if (p.Id == "maimon") Assert.Null(p.Born);
+            else Assert.NotNull(p.Born);
+            foreach (var key in p.Id == "maimon" ? new[] { "name_he", "died" } : new[] { "name_he", "born", "died" })
+            {
+                Assert.True(p.BiographySources.TryGetValue(key, out var sources), $"{p.Id}: missing biography_sources.{key}");
+                Assert.NotEmpty(sources);
+                Assert.All(sources, source => Assert.True(Uri.TryCreate(source.Url, UriKind.Absolute, out var uri) && (uri.Scheme == "https" || uri.Scheme == "http")));
+            }
+        }
+    }
+
+    [Fact]
     public void BenGurionBiographyValuesAreSourced()
     {
         var p = C.People.Single(p => p.Id == "ben_gurion");
