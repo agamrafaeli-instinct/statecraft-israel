@@ -82,10 +82,30 @@ public class PeriodValidationTests
         Assert.Contains("is abolished on 1949-01-01: give its budget line to the office that took over", ex.Message);
     }
 
+    [Theory]
+    [InlineData("1949-03-09", false)]
+    [InlineData("1949-03-10", true)]
+    [InlineData("1973-12-01", true)]
+    public void OpenTermDeathIsCheckedAgainstLatestGovernmentStart(string death, bool loads)
+    {
+        var people = Fixture.Files["people.yaml"].Replace("    name: Pm One\n", "    name: Pm One\n    died: " + death + "\n");
+        var dir = Fixture.Write(new Dictionary<string, string> { ["people.yaml"] = people });
+        if (loads) Assert.Equal(DateTime.Parse(death), ContentLoader.Load(dir).People.Find(p => p.Id == "pm_one")!.Died);
+        else
+        {
+            var ex = Assert.Throws<ContentException>(() => ContentLoader.Load(dir));
+            Assert.Equal("people.yaml", ex.File);
+            Assert.Equal("people[pm_one].offices.prime_minister.to", ex.Field);
+        }
+    }
+
     [Fact]
     public void ATermRunningPastTheHoldersDeathIsALoadError()
     {
-        var ex = ValidationTests.Bad("people.yaml", "    name: Def Two\n", "    name: Def Two\n    died: 1949-06-01\n");
+        var people = Fixture.Files["people.yaml"].Replace("    name: Def Two\n", "    name: Def Two\n    died: 1949-06-01\n")
+            .Replace("        from: 1949-01-01\n", "        from: 1949-01-01\n        to: 1949-06-02\n");
+        var ex = Assert.Throws<ContentException>(() => ContentLoader.Load(Fixture.Write(new Dictionary<string, string> { ["people.yaml"] = people })));
+        Assert.Equal("people.yaml", ex.File);
         Assert.Equal("people[def_two].offices.defense_minister.to", ex.Field);
         Assert.Contains("must be on or before 1949-06-01, the date of death", ex.Message);
     }
