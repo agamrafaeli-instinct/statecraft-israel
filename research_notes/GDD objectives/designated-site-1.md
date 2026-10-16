@@ -314,6 +314,76 @@ Two more files in the same batch (129771 and 129772) are from 1968, by other aut
 - If Mefalsim is chosen, `content/sites.yaml` could cite the Gvati list and the Yad Ben-Zvi page for `founded:
   1949-06-12`. Both were read today.
 
+## 5. Gazetteer check of the small villages near Mefalsim (16 October 2026, #654)
+
+Section 1 left question 7 as "absence of evidence in Wikipedia, not a gazetteer check": places under 1,000
+people near Mefalsim were not checked against a gazetteer. This section closes that gap for both sites.
+
+### How it was done
+
+Three sweeps, all read on 16 October 2026:
+
+1. The en.wikipedia geosearch API, 10 km around 31.5019 N, 34.5644 E (the 1950 site), which returns every
+   geo-tagged article in the radius; then a second 10 km sweep centred 2 km toward Beit Hanoun, the direction
+   Hebrew Wikipedia gives for the 1949 site's exposure to fire, to cover the site whose coordinates were never
+   found.
+2. *Village Statistics 1945*, the Mandate government's official land and population survey: the full Gaza
+   Sub-District table (Table I), read in the scan's text at archive.org, identifier
+   `palestine-village-statistics-1945`. **[V]** This is the gazetteer the population threshold itself comes from.
+3. The Survey of Palestine 1:100,000, Gaza, Sheet 9, second edition 1942 (GSGS 4079), read as a scan at
+   maps.mapywig.org. The area from Gaza city east to Bureir and from Barbara south to Tell Abu Hureira was
+   inspected; every named place in it was compared with the Village Statistics table. **[V]**
+
+Distances use each village's en.wikipedia/Wikidata coordinates against the 1950 site.
+
+### Result
+
+Seven depopulated villages lie within 10 km of the 1950 site. 1945 populations are from Village Statistics
+1945, Gaza Sub-District Table I **[V]**; the settlement-on-land column is from the en.wikipedia articles and
+their citation chains (Village Statistics 1945; Khalidi 1992, quoted but not read page by page) **[S]**.
+
+| Village | VS 1945 name, population | Distance | Settlement named on its land | Names Mefalsim? |
+|---|---|---|---|---|
+| Huj | Hoj and Dorot: 810 Arabs, 230 Jews (counted together) | 5.6 km | Havat Shikmim, on village lands (bought by A. Sharon in 1972) | No |
+| al-Muharraqa | Muharraqa, El: 580 | 5.9 km | Yakhini (1950) | No |
+| Najd | Najd: 620 | 6.3 km | Sderot, Or HaNer | No |
+| Dimra | Dimra: 520 | 6.3 km | Erez | No |
+| Dayr Sunayd | Deir Suneid: 730 | 8.1 km | None; "the village's lands left undeveloped" | No |
+| Kawfakha | Kaufakha: 500 | 9.6 km | Nir Akiva (1953), southwest of the village site | No |
+| Simsim | Sumsum: 1,290 Arabs, 70 Jews | 8.3 km | Gvar'am (1942), on land traditionally belonging to the village | No |
+
+Simsim at 1,360 is over the 1,000 threshold (it is already in `map/localities_1948.yaml` as Sumsum), so the
+under-1,000 gap reduces to six villages: the four checked for #653 plus **Dayr Sunayd and Kawfakha, new this
+pass**. Neither names Mefalsim.
+
+Completeness:
+
+- Every other Gaza Sub-District place under 1,000 in Village Statistics 1945 is farther than 10 km away.
+  Spot-checked coordinates: Hulayqat 13.7 km, al-Khisas 16.3 km, Hatta 23.6 km, Ibdis 23.3 km; the rest are the
+  Julis-Iraq Suweidan-Qastina cluster, farther northeast. **[S]** (en.wikipedia coordinates)
+- The 1942 sheet shows no other named village inside the sweep. Its remaining labels there are ruins ("Kh."),
+  shrines ("Sh."), tells and bedouin land tracts ("Baikat ..."), none of which appear as villages in Village
+  Statistics 1945. **[V]**
+- The 1949 site: still no coordinates **[G]** (searched: en.wikipedia, he.wikipedia, both geosearch sweeps).
+  Hebrew Wikipedia describes only a kurkar hill facing the Gaza border, under fire from Beit Hanoun, later a
+  firing range and an IDF post. The offset geosearch sweep added no village, and the 1942 sheet shows no named
+  village southeast of Beit Hanun toward the border, so the result holds for any plausible 1949 position.
+- Nothing stands at Mefalsim's own position on the 1942 sheet: the land southeast of Beit Hanun between Najd
+  and the border is open country with contour lines and land-tract labels only. **[V]**
+
+Answer to #654: no gazetteer source places Mefalsim on any depopulated village's land. The nearest
+settlement-on-village-land facts are Yakhini on al-Muharraqa's land (1950) and Or HaNer on Najd's (1957);
+Mefalsim is on none. Whether the `first_new_yishuv.yaml` source comment should now say the under-1,000 check is
+done is the content owner's edit, not this note's.
+
+### Sources not reached
+
+- Khalidi, *All That Remains* (1992): not read page by page. His 1992 site descriptions reached through the
+  en.wikipedia articles that quote them. **[S]**
+- Palestine Remembered: not used, per #654 ("lead only").
+- The 1955 revision of the Gaza sheet (GSGS 4645), ANU openresearch, hdl.handle.net/1885/199041: the 1942
+  edition was read instead, because it shows the pre-1948 village pattern.
+
 ## Open questions for the owner
 
 1. Mefalsim despite the line hex, the 1950 move and the 7 October 2023 association? Or wait for a newspaper check
