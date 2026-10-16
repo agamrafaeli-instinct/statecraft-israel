@@ -16,9 +16,10 @@ calls (D-D1 to D-D4, D-D8 in #375).
 
 ## Summary
 
-1. **Six of the eight missing towns now have a 1945 anchor [S].** Nazareth 14,200; Acre 12,360; Tiberias 11,310;
-   Beersheba 5,570; Afula 2,310; Safed 13,700 by 1948. Petah Tikva was about 22,000 after its 1948-52 municipal
-   mergers. Holon still has no readable 1945 or 1948 figure [G].
+1. **Five of the eight missing towns now have a 1945 Village Statistics anchor [S]** - Nazareth 14,200; Acre
+   12,360; Tiberias 11,310; Beersheba 5,570; Afula 2,310 - **and Safed has the article's 13,700 "by 1948" figure
+   (not a 1945 anchor).** Petah Tikva was about 22,000 after the municipal mergers the article dates only "after
+   14 May 1948". Holon still has no readable 1945 or 1948 figure [G].
 2. **The ma'abarot conflict is resolved as two different categories and two different dates.** The 26,039 (end of 1951)
    counts immigrant camps and reception centres; the 250,000 is the ma'abarot scale, dated by the National Library of
    Israel to 1953 (about 130 ma'abarot), not 1951. One residual conflict: the English Wikipedia dates "127 ma'abarot
