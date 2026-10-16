@@ -324,7 +324,7 @@ people near Mefalsim were not checked against a gazetteer. This section closes t
 Three sweeps, all read on 16 October 2026:
 
 1. The en.wikipedia geosearch API, 10 km around 31.5019 N, 34.5644 E (the 1950 site), which returns every
-   geo-tagged article in the radius; then a second 10 km sweep centred on 31.53 N, 34.52 E, about 3 km from
+   geo-tagged article in the radius; then a second 10 km sweep centred on 31.53 N, 34.52 E, about 5 km from
    the 1950 site toward Beit Hanoun - the direction Hebrew Wikipedia gives for the 1949 site's exposure to
    fire - to cover the site whose coordinates were never found.
 2. *Village Statistics 1945*, the Mandate government's official land and population survey: the full Gaza
@@ -363,9 +363,9 @@ belongs to the 1949 site's coverage. None of the seven names Mefalsim.
 
 Completeness:
 
-- The offset sweep (31.53 N, 34.52 E, 10 km) returns exactly Dimra, Dayr Sunayd, Najd, Simsim, Huj and Bayt
-  Jirja among depopulated villages. Hirbiya (2,240 Arabs and 60 Jews in VS 1945, over the threshold) lies
-  just beyond it. **[S]** (geosearch result; VS 1945 population)
+- The offset sweep (31.53 N, 34.52 E, 10 km) returns exactly Dimra, Dayr Sunayd, Najd, Hiribya, Simsim,
+  Huj and Bayt Jirja among depopulated villages; Hiribya (2,240 Arabs and 60 Jews in VS 1945, at 8.8 km) is
+  over the threshold. **[S]** (geosearch result; VS 1945 population)
 - Every other Gaza Sub-District place under 1,000 in Village Statistics 1945 is farther than 10 km from the
   1950 site. Spot-checked coordinates: Hulayqat 13.7 km, al-Khisas 16.3 km, Hatta 23.6 km, Ibdis 23.3 km; the
   rest are the Julis-Iraq Suweidan-Qastina cluster, farther northeast. **[S]** (en.wikipedia coordinates)
