@@ -26,11 +26,18 @@ public class DesignValuesTests
         ("rules.yaml", "mvp.income_per_job_per_year"),
         ("rules.yaml", "mvp.build_yishuv_turns"),
         ("rules.yaml", "mvp.build_yishuv_cost"),
+        ("rules.yaml", "mvp.build_camp_turns"),
+        ("rules.yaml", "mvp.build_camp_cost"),
+        ("rules.yaml", "mvp.plow_fields_turns"),
+        ("rules.yaml", "mvp.plow_fields_cost"),
+        ("rules.yaml", "mvp.field_food_per_turn"),
         ("rules.yaml", "mvp.objective_points"),
         ("rules.yaml", "mvp.objective_bonus_per_month"),
         ("rules.yaml", "mvp.objective_bonus_cap"),
         ("rules.yaml", "mvp.k_food"),
         ("rules.yaml", "mvp.cover_months"),
+        ("rules.yaml", "mvp.veteran_halutz_service"),
+        ("rules.yaml", "mvp.veteran_progress"),
         // Q-START-1 (owner, 15 October 2026, #375): no city has a sourced housing stock or job count, so every city's
         // housing is its start people and its job slots its start employed; seven towns with no CBS working share take
         // the national one. The census people and the five CBS shares are sourced, not design values (R-CITY-006).

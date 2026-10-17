@@ -6,7 +6,8 @@ namespace Statecraft.Sim.Reference
 {
     /// <summary>Test policy for the GDD goldens (D-A7): a stated simple policy, not game AI and not historical. It sends
     /// HistoricalAI's orders, then fills each city's jobs with as many civilians as there are jobs, then sends each idle halutz
-    /// unit to the first available yishuv site, then, when there is no halutz and none in training, trains one halutz group in
+    /// unit to the first available yishuv site (then to the first ready field, then to the first available camp site), then,
+    /// when there is no halutz and none in training, trains one halutz group in
     /// the first city with a Hakhshara and a civilian left without work, while the turn's Attention lasts (both orders borrow). It lives in Statecraft.Sim only so Unity can replay the goldens (#394; GoldenRun); no game mode or UI may reach it
     /// (ReferencePlayerTests.NoGameModeOrUiReachesIt).</summary>
     public static class ReferencePlayer
@@ -27,30 +28,44 @@ namespace Statecraft.Sim.Reference
             var halutz = c.UnitTypes.FirstOrDefault(t => t.Id == "halutz");
             if (halutz == null) return list;
             Build(c, s, list, ref left);
-            if (s.Units.Values.Any(u => u.Type == halutz.Id) || s.Cohorts.Values.Any(k => k.Type == halutz.Id)) return list;
+            if (s.Units.Values.Any(u => Projects.IsPioneer(u.Type)) || s.Cohorts.Values.Any(k => k.Type == halutz.Id)) return list;
             var trainCost = AttentionSystem.Cost(c, s, Training.TrainKind);
             if (trainCost > left + 1e-9) return list;   // training borrows, so the Treasury does not hold it back
             foreach (var city in s.Cities.Values)
             {
                 var employed = list.OfType<AssignWorkers>().Where(a => a.City == city.Id).Select(a => a.Count).DefaultIfEmpty(city.Employed).Last();
-                if (city.Civilians - employed < 1 || !c.Cities.First(x => x.Id == city.Id).Facilities.Contains(halutz.Facility)) continue;
+                if (city.Civilians - employed < 1 || !Training.HasFacility(c, s, city.Id, halutz.Facility)) continue;
                 list.Add(new Train(city.Id, halutz.Id, 1));
                 break;
             }
             return list;
         }
 
-        /// <summary>Sends each idle halutz unit, in id order, to the first yishuv site without a record, in ordinal id order,
-        /// while the turn's Attention lasts. Pioneer work borrows, so the Treasury does not hold it back.</summary>
+        /// <summary>Sends each idle halutz unit, veterans too, in id order, to the first yishuv site without a record, in ordinal id order,
+        /// and once every yishuv site has one, to plow the first ready field site without a record (R-FIELD-001), and when there
+        /// is none, to build the first camp site without a record (R-CAMP-001), while the turn's Attention lasts. Pioneer work
+        /// borrows, so the Treasury does not hold it back.</summary>
         static void Build(Content c, GameState s, List<Command> list, ref double left)
         {
             var cost = AttentionSystem.Cost(c, s, Projects.PioneerKind);
             var taken = new HashSet<string>(s.Sites.Keys, StringComparer.Ordinal);
-            foreach (var u in s.Units.Values.Where(u => u.Type == "halutz" && !Projects.IsBusy(s, u.Id)))
+            foreach (var u in s.Units.Values.Where(u => Projects.IsPioneer(u.Type) && !Projects.IsBusy(s, u.Id)))
             {
                 var site = c.Sites.Where(x => x.Kinds.Contains(Projects.YishuvKind) && !taken.Contains(x.Id)).OrderBy(x => x.Id, StringComparer.Ordinal).FirstOrDefault();
+                var action = Projects.BuildYishuv;
+                if (site == null)
+                {
+                    site = c.Sites.Where(x => x.Kinds.Contains(Projects.FieldKind) && !taken.Contains(x.Id) && Projects.YishuvToBuildFirst(c, s, x) == null)
+                        .OrderBy(x => x.Id, StringComparer.Ordinal).FirstOrDefault();
+                    action = Projects.PlowFields;
+                }
+                if (site == null)
+                {
+                    site = c.Sites.Where(x => Projects.IsCamp(x) && !taken.Contains(x.Id)).OrderBy(x => x.Id, StringComparer.Ordinal).FirstOrDefault();
+                    action = Projects.BuildCamp;
+                }
                 if (site == null || cost > left + 1e-9) return;
-                list.Add(new PioneerWork(u.Id, Projects.BuildYishuv, site.Id));
+                list.Add(new PioneerWork(u.Id, action, site.Id));
                 taken.Add(site.Id);
                 left -= cost;
             }

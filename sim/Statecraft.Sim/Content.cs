@@ -475,6 +475,19 @@ namespace Statecraft.Sim
         public int BuildYishuvTurns { get; set; }
         /// <summary>IL millions a "build yishuv" costs, paid in full when it starts (R-SITE-001).</summary>
         public double BuildYishuvCost { get; set; }
+        /// <summary>Turns a "build camp" takes, counting the turn it was ordered in (R-CAMP-001; Q-CAMP-3). Required in the GDD
+        /// loop, at least 1.</summary>
+        public int? BuildCampTurns { get; set; }
+        /// <summary>IL millions a "build camp" costs, paid in full when it starts (R-CAMP-001). Required in the GDD loop.</summary>
+        public double? BuildCampCost { get; set; }
+        /// <summary>Turns plowing a field takes, counting the turn it was ordered in (R-FIELD-001, as R-SITE-003).</summary>
+        public int PlowFieldsTurns { get; set; }
+        /// <summary>IL millions plowing a field costs, paid in full when it starts (R-FIELD-001, as R-SITE-001). Required in the
+        /// GDD loop, so a missing key never makes plowing free.</summary>
+        public double? PlowFieldsCost { get; set; }
+        /// <summary>Food units a plowed field adds to the national stock each turn, in step 6 (R-FIELD-002; Q-FIELD-3). Required
+        /// in the GDD loop, so a missing key is never read as 0.</summary>
+        public int? FieldFoodPerTurn { get; set; }
         /// <summary>Points for each completed objective (R-OBJ-002; D-B6, #456).</summary>
         public int? ObjectivePoints { get; set; }
         /// <summary>Bonus points for each calendar month an objective is completed before its reference date's month (R-OBJ-002; D-B2, #456).</summary>
@@ -487,6 +500,12 @@ namespace Statecraft.Sim
         /// <summary>The months of the nation's need the Food stock holds when full: the start stock and the level the monthly
         /// imports keep (R-FOOD-001, R-FOOD-002). Required in the GDD loop, at least 1.</summary>
         public int? CoverMonths { get; set; }
+        /// <summary>Turns of work after which a halutz unit becomes a veteran_halutz (R-VET-001; D-D9, Q-VET-1). Required in
+        /// the GDD loop, at least 1.</summary>
+        public int? VeteranHalutzService { get; set; }
+        /// <summary>Turns of progress a veteran's project gains each turn, against a halutz's 1 (R-VET-002; D-D9, Q-VET-2).
+        /// Required in the GDD loop, at least 1.</summary>
+        public int? VeteranProgress { get; set; }
     }
 
     /// <summary>A designated site (sites.yaml; docs/GDD.md "Pioneer work": building is allowed only at designated spots, and a

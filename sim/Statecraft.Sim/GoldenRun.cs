@@ -15,13 +15,13 @@ namespace Statecraft.Sim
         /// <summary>Final hash of Play(content, Until1950). Changing it is a deliberate rules or content change: the value
         /// is pinned in sim/Statecraft.Sim.Tests/golden/manifest.txt, and STATECRAFT_UPDATE_GOLDEN=1 dotnet test rewrites
         /// both (docs/determinism.md). Say why in the commit message.</summary>
-        public const string Hash1950 = "37c510500b6524af0d033bf31824ac33c3b6f14e1afeb68b4a18c7bf774dca2b";
+        public const string Hash1950 = "e4ebff9b317a02b908434cedb18674608ae820e5e60769ef78272493884590c4";
 
         public static readonly DateTime Until1950 = new DateTime(1950, 1, 1);
 
         /// <summary>Final hash of Play(content, Until1952): the M3 content range (to 31 December 1951). The GDD game ends on
         /// 15 January 1952 (R-LOOP-004), the first turn on or after Until1952, so this is also the mvp-end run.</summary>
-        public const string Hash1952 = "7745031b2096354784178b4e7c7ea80777afbe8968cb52eeb12122ce5e55cfaa";
+        public const string Hash1952 = "e0d8212a1f6ea8af9211166aa52b76c741c739807d4326b6b6664a5c5d26857f";
 
         public static readonly DateTime Until1952 = new DateTime(1952, 1, 1);
 
