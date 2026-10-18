@@ -23,6 +23,8 @@ namespace Statecraft.Game.Map
         void OnEnable()
         {
             press = new InputAction("map-press", InputActionType.Button, "<Mouse>/leftButton");
+            // a phone's tap selects too: Touchscreen is a Pointer, so OnPressed reads the touch position unchanged
+            press.AddBinding("<Touchscreen>/touch*/press");
             press.performed += OnPressed;
             press.Enable();
         }
