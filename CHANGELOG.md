@@ -7,6 +7,11 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ## [Unreleased]
 
+### Fixed
+- On a notched phone the HUD and the panels keep clear of the notch and the home indicator: the root is padded by
+  the browser's `env(safe-area-inset-*)` values (the camera's top inset and the map labels follow as before); desktops
+  and notch-free phones are unchanged.
+
 ## [0.1.2] - 2026-10-19
 
 ### Added
