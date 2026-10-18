@@ -467,6 +467,15 @@ namespace Statecraft.Sim
         public int PeoplePerUnit { get; set; }
         /// <summary>Money each employed unit earns a year, in IL millions (R-CITY-002).</summary>
         public double IncomePerJobPerYear { get; set; }
+        /// <summary>What an employed craftsman earns, as a multiple of <see cref="IncomePerJobPerYear"/> (R-CRAFT-002, Q-CRAFT-2).</summary>
+        public double CraftsmanIncomeMultiple { get; set; }
+        /// <summary>Annual civilian-place upkeep in IL millions (R-MONEY-002). Required in the GDD loop; the MVP values are 0.</summary>
+        public double? CityUpkeepPerYear { get; set; }
+        public double? HousingUpkeepPerYear { get; set; }
+        public double? IndustryUpkeepPerYear { get; set; }
+        public double? TransitCampUpkeepPerYear { get; set; }
+        public double? MilitaryCampUpkeepPerYear { get; set; }
+        public double? HakhsharaUpkeepPerYear { get; set; }
         /// <summary>The day the cities start taking arrivals: the census day their start values count (R-CITY-003, Q-ARRV-3).</summary>
         public DateTime CityArrivalsFrom { get; set; }
         /// <summary>The day the GDD game ends (R-LOOP-004; D-E5, 15 January 1952 in the real content), or null for the last
@@ -519,6 +528,18 @@ namespace Statecraft.Sim
         /// <summary>How far a city's housing condition falls in a turn when all its people are beyond its housing; a turn takes
         /// this times the city's overflow share (R-HOUSE-002; D-D1, Q-HOUSE-1). Required in the GDD loop, 0 to 1.</summary>
         public double? OverflowConditionLoss { get; set; }
+        /// <summary>Consecutive turn ends with Money and Food both exhausted that end the game (R-END-002; D-B5, Q-DEF-2).
+        /// Required in the GDD loop, at least 1.</summary>
+        public int? DefeatTurns { get; set; }
+        /// <summary>The debt, in IL millions, at or above which Money is exhausted (R-END-001; D-B5, Q-DEF-1). Required in the
+        /// GDD loop, a finite number >= 0.</summary>
+        public double? DebtCeiling { get; set; }
+        /// <summary>A minister whose loyalty is below this carries a delegated decision out half-heartedly (R-EVT-003; #107,
+        /// owner, 18 October 2026). Required in the GDD loop, 0 to 10 (0: nobody is below it).</summary>
+        public int? DelegationLoyaltyFloor { get; set; }
+        /// <summary>The share of each numeric effect a delegated option applies when its minister is below the loyalty floor
+        /// (R-EVT-003; #107). Required in the GDD loop, 0 to 1.</summary>
+        public double? DisloyalEffectShare { get; set; }
     }
 
     /// <summary>A kind of city project (projects.yaml; GDD "Cities and construction"; R-PROJ-001 to R-PROJ-003): permanent
@@ -538,6 +559,9 @@ namespace Statecraft.Sim
         public double Condition { get; set; }
         /// <summary>Job slots added to the city when done, in population units.</summary>
         public int JobSlots { get; set; }
+        /// <summary>A city resource the city must have (cities.yaml `resources:`), or "" for none: a specialised industry such as
+        /// the winery, which needs vineyards (R-PROJ-005, D-D8).</summary>
+        public string Requires { get; set; } = "";
     }
 
     /// <summary>A designated site (sites.yaml; docs/GDD.md "Pioneer work": building is allowed only at designated spots, and a
@@ -587,6 +611,16 @@ namespace Statecraft.Sim
         public List<Source> Sources { get; set; } = new List<Source>();
     }
 
+    /// <summary>A city's local resource (cities.yaml `resources:`; R-PROJ-005, D-D8: "A winery requires areas for grapes"): an
+    /// id a project kind's `requires` names, its sources (each with a url and a checked date), and what the sources leave
+    /// open (`to_verify`, as in map/routes_1948.yaml).</summary>
+    public sealed class CityResource
+    {
+        public string Id { get; set; } = "";
+        public List<Source> Sources { get; set; } = new List<Source>();
+        [YamlMember(Alias = "to_verify")] public string ToVerify { get; set; } = "";
+    }
+
     /// <summary>A city's start values (cities.yaml, GDD "Cities and construction"). The file gives people and shares, each
     /// with its status (R-CITY-006); the loader turns them into the population units the sim counts (D-A1, R-CITY-007).</summary>
     public sealed class CityStart
@@ -603,6 +637,8 @@ namespace Statecraft.Sim
         [YamlMember(Alias = "job_slots")] public CityValue? Jobs { get; set; }
         /// <summary>Training facilities in the city (military_camp, hakhshara). PR 4 uses them (D-D5).</summary>
         public List<string> Facilities { get; set; } = new List<string>();
+        /// <summary>The city's local resources (R-PROJ-005, D-D8), each sourced, which a specialised project may require.</summary>
+        public List<CityResource> Resources { get; set; } = new List<CityResource>();
 
         // The units the sim starts from, set by the loader (R-CITY-007).
         [YamlIgnore] public int HousingCapacity { get; internal set; }
@@ -625,6 +661,10 @@ namespace Statecraft.Sim
         public int TrainingTurns { get; set; }
         /// <summary>IL millions per population unit trained, paid when training starts (R-TRAIN-001). Only with a facility.</summary>
         public double TrainingCost { get; set; }
+        /// <summary>A military type's side (units_1948.yaml's side ids), or "" for a type that is not military (R-UNIT-001).</summary>
+        public string Side { get; set; } = "";
+        /// <summary>A military type's class: infantry, artillery or armour, or "" for a type that is not military (R-UNIT-001).</summary>
+        public string Class { get; set; } = "";
     }
 
     /// <summary>One stretch of a budget line's ownership (rules.yaml budget_owners): from this day (inclusive) the office owns the line.</summary>
@@ -858,11 +898,28 @@ namespace Statecraft.Sim
         public string Card { get; set; } = "";
     }
 
-    /// <summary>What completes an objective (objectives.yaml completes_when). Phase 1 has one kind.</summary>
+    /// <summary>What completes an objective (objectives.yaml completes_when): exactly one kind.</summary>
     public sealed class ObjectiveCondition
     {
         /// <summary>A designated site (sites.yaml) of kind yishuv: complete once it is built (R-SITE-003).</summary>
         public string SiteBuilt { get; set; } = "";
+        /// <summary>The cities have absorbed the immigrants (R-OBJ-004, D-B4).</summary>
+        public AbsorbCondition? Absorbed { get; set; }
+    }
+
+    /// <summary>R-OBJ-004 (D-B4; owner, 18 October 2026, #738, option (a)): once the Jewish population has reached
+    /// <see cref="PopulationAtLeast"/>, the cities' overflow is at most <see cref="OverflowAtMost"/> of the people they house
+    /// and their employed civilians at least <see cref="EmployedAtLeast"/> of their civilians. The population gate keeps the
+    /// start values (already 41% employed, no overflow) from completing it on the first turn.</summary>
+    public sealed class AbsorbCondition
+    {
+        /// <summary>GameState.TotalPopulation, the national Jewish count, at or above this.</summary>
+        public long PopulationAtLeast { get; set; }
+        /// <summary>Overflow (R-HOUSE-002) over the housed people (R-HOUSE-003), at or below this share. Required: 0 is a
+        /// real value here, so a missing key must not read as 0.</summary>
+        public decimal? OverflowAtMost { get; set; }
+        /// <summary>Employed over civilians (as R-CITY-005 counts them), at or above this share.</summary>
+        public decimal EmployedAtLeast { get; set; }
     }
 
     /// <summary>One hex of content/map/hexes.json (written by tools/hexgrid.py; axial q, r, pointy-top).</summary>

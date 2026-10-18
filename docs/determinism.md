@@ -20,7 +20,7 @@ The simulation must produce the same state, bit for bit, on .NET, Unity Mono and
 with `GoldenRun.Seed = 1948` on the real `content/`, then steps with `GoldenRun.Orders` until `Date >= until`
 (or the game ends, or 1000 turns pass). Since the GDD cutover (Phase 2 PR 1) the orders are the reference player's
 (`Statecraft.Sim.Reference.ReferencePlayer`, decision D-A7): a stated test policy, not game AI and not history. It sends
-`HistoricalAI`'s orders, then fills each city's jobs, then trains one halutz group when there is none and none in training,
+`HistoricalAI`'s orders and leaves the jobs to each city's default (R-CITY-009), then trains one halutz group when there is none and none in training,
 while the turn's Attention and the Treasury last. No game mode or UI reaches it (`ReferencePlayerTests`); every copy of the
 golden loop (the writer preview, the invariants, the era goldens) takes its orders from `GoldenRun.Orders`. The real game
 plays the GDD loop on monthly turns from 15 May 1948 and ends on 15 January 1952 after 44 turns (R-LOOP-004). Each run's
@@ -81,9 +81,10 @@ them from a seed (default 1948) in Historical mode until `until:`, and `Scenario
 scripted command passes. A command the sim rejects fails the test with the date, the order and the reason, and a step that never runs
 fails too. To add one: write the file, run `STATECRAFT_UPDATE_GOLDEN=1 dotnet test sim/Statecraft.sln --filter ScenarioTests` (it adds the
 manifest line and the snapshot), then run the tests plain. A scenario that moves is re-pinned with the hash goldens by the same
-command; its snapshot diff in the PR shows what moved, and the commit message says why. All three play the real content.
+command; its snapshot diff in the PR shows what moved, and the commit message says why. All four play the real content.
 `cautious` and `reckless` stay in 1948, so they move only when a 1948 rule or event does; `mvp-absorb-first` (GDD Phase 1
-PR 3) fills Tel Aviv's jobs on the first turn and plays to 15 June 1949.
+PR 3) fills Tel Aviv's jobs on the first turn and plays to 15 June 1949; `mvp-defeat` (GDD Phase 7 PR 5) overspends and
+turns down every source of foreign currency until Money and Food run out, and ends in `defeat_economy` (R-END-002).
 
 **MVP goldens after the cutover.** The real game is the GDD game, so every golden above is an MVP golden. Each PR that
 changes an MVP rule or a design value (R-LOOP-005) moves the goldens it reaches, re-pins them in the same PR, adds a row to
@@ -292,3 +293,5 @@ The hash reads the state keys, so it never sees a record outside its window. An 
 | GDD Phase 3 PR 4 | 1950 | `9922495a` | city projects (R-PROJ-001 to R-PROJ-003, #735; Q-PROJ-1 to Q-PROJ-5, Q-HOUSE-3, owner, 15 October 2026, #375): the reference player's stated policy (D-A7) now starts a housing project, one at a time, in the city with the most overflow, on the first free hex next to it, borrowing as its other orders do. Its first start is on 1949-03-15 in Tel Aviv, built on 1949-08-15 (+5 capacity, +0.03 condition); the second is being built. `cproj[...]` joins the state; `mapturn` now counts the turn's project starts. Tel Aviv's capacity 253 (was 248) and condition 0.0168 (was 0), so `housing` 0.0932 (was 0.0850), `morale` 0.5018 (was 0.4990), stability 0.5002 (was 0.4970); debt IL 91.5m (was 79.5m, 2 x IL 6m); rebased on Kiryat Shmona and Beit Shemesh (#944) and the event city effect (#1001) (was `69ac1384`) |
 | GDD Phase 3 PR 4 | 1952 | `548a6acc` | same; five Tel Aviv projects built (1949-08-15 to 1951-08-15; capacity 273, was 248) and a sixth, in Haifa, being built. Every city is back at condition 0 by the end, so `housing` is unchanged and `morale` moves only in the 10th decimal; debt IL 223.9m (was 187.9m, 6 x IL 6m), inside invariants.yaml's 100 to 300 band; stability 0.4432 (unchanged to 4 places) (was `b34faec6`) |
 | GDD Phase 3 PR 4 | mvp-end | `548a6acc` | same; the same run as hash1952 (was `b34faec6`) |
+| GDD Phase 7 PR 5 | scenario-mvp-defeat | `d1e0dcf6` | new: full mobilisation and the non-historical option of the four foreign currency cards; the debt passes the IL 250m ceiling on 15 April 1951, foreign currency runs out on 15 August, food imports stop, the stock is empty from 15 November, and the third turn end with Money and Food both exhausted ends the game with `defeat_economy` on 15 January 1952 (`exhausted=3`). No other golden moves: the reference and the no-order runs never have Food at 0, so the counter stays at 0 and out of the hash. Rebased on the Hula swamp (#968): `hula_drainage` no longer fires in this run (no works at the Hula) and, as in the 1952 run on main, `iraqi_exodus` resolves to `airlift` (was `pace`), so the end state differs; the defeat dates above are unchanged (was `cbebedfa` before the rebase) |
+| GDD Phase 3 PR 5 | scenario-mvp-absorb-first | `be13c409` | the job default and the craftsman (R-CITY-009, R-CRAFT-001, R-CRAFT-002; Q-JOBS-1, Q-CRAFT-1 to Q-CRAFT-3, owner, 15 October 2026, #375; #736): the scenario's one order, `AssignWorkers` for 90 of Tel Aviv's 106 jobs on 15 May 1948, now turns Tel Aviv's job default off, so its `city{}` record gains `,jobs=manual`. No number moves: Tel Aviv keeps its 90 as before, and the other cities' jobs stay full. `hash1950`, `hash1952`, `mvp-end`, `smoke5`, `scenario-cautious`, `scenario-reckless` and `scenario-mvp-defeat` do not move: the reference player no longer sends `AssignWorkers`, and on those runs the default fills the same jobs it did; nobody trains a craftsman (was `a77a8f20`) |
