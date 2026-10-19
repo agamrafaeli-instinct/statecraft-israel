@@ -67,7 +67,7 @@ public class LeftColumnTests
         var rt = new RenderTexture(w, h, 0);
         var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
         ps.targetTexture = rt;
-        if (uiScale != 100) ps.referenceResolution = new Vector2(1920f * 100f / uiScale, 1080f * 100f / uiScale);   // #40: the panel as the Settings scale choice sets it
+        if (uiScale != 100) ps.referenceResolution = new Vector2Int(Mathf.RoundToInt(1920f * 100f / uiScale), Mathf.RoundToInt(1080f * 100f / uiScale));   // #40: the panel as the Settings scale choice sets it
         var go = new GameObject("LeftColumnTest");
         go.SetActive(false);
         var doc = go.AddComponent<UIDocument>();
