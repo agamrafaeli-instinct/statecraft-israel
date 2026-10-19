@@ -50,4 +50,22 @@ public class SafeAreaTests
         for (int i = 0; i < 10 && ui.Root.resolvedStyle.paddingTop > 0f; i++) yield return null;
         Assert.AreEqual(0f, ui.Root.resolvedStyle.paddingTop, 1f, "Dispose resets the padding");
     }
+
+    /// <summary>The review probe: two landscapes of the same dimensions swap the notch side with the root bounds
+    /// unchanged, so no GeometryChangedEvent fires. The per-frame poll still moves the padding: settle on the left,
+    /// flip to the right, and the padding follows without the test calling Update/Apply itself.</summary>
+    [UnityTest]
+    public IEnumerator InsetChangesArePickedUpWhenTheBoundsDoNotChange()
+    {
+        using var ui = new UiTestKit();
+        var insets = (l: 47f, r: 0f, t: 0f, b: 0f);
+        using var fit = new SafeAreaFit(ui.Root, () => insets);
+        for (int i = 0; i < 20 && float.IsNaN(ui.Root.resolvedStyle.width); i++) yield return null;
+        yield return null; yield return null;
+        Assert.AreEqual(47f, ui.Root.style.paddingLeft.value.value, 1e-3f, "settled: the left inset pads the left");
+        insets = (0f, 47f, 0f, 0f);   // the notch moved to the right edge; the bounds did not change
+        for (int i = 0; i < 30; i++) yield return null;
+        Assert.AreEqual(47f, ui.Root.style.paddingRight.value.value, 1e-3f, "the poll moved the padding to the right");
+        Assert.AreEqual(0f, ui.Root.style.paddingLeft.value.value, 1e-3f, "and cleared the left");
+    }
 }

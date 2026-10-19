@@ -9,8 +9,10 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ### Fixed
 - On a notched phone the HUD and the panels keep clear of the notch and the home indicator: the root is padded by
-  the browser's `env(safe-area-inset-*)` values (the camera's top inset and the map labels follow as before); desktops
-  and notch-free phones are unchanged.
+  the browser's `env(safe-area-inset-*)` values (the camera's top inset and the map labels follow as before), and it
+  follows the insets even when the root bounds do not change, as a same-size landscape flip moves the notch with no
+  geometry event (a per-frame poll); desktops and notch-free phones are unchanged.
+
 ### Added
 - Unit cards show the sourced Hebrew unit name in the Hebrew UI, with an English fallback. INS Haganah gains its
   sourced Hebrew name, still flagged for a native speaker's review (#902).

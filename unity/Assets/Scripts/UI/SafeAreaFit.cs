@@ -13,12 +13,20 @@ namespace Statecraft.Game.UI
     public sealed class SafeAreaFit : System.IDisposable
     {
         readonly VisualElement root;
+        readonly System.Func<(float l, float r, float t, float b)>? readInsets;   // tests feed the insets; production reads the platform
+        IVisualElementScheduledItem? poll;
         float appliedL = -1f, appliedR, appliedT, appliedB;   // an impossible start: the first Update always writes
 
-        public SafeAreaFit(VisualElement root)
+        public SafeAreaFit(VisualElement root) : this(root, null) { }
+
+        internal SafeAreaFit(VisualElement root, System.Func<(float l, float r, float t, float b)>? readInsets)
         {
             this.root = root;
-            root.RegisterCallback<GeometryChangedEvent>(OnGeometry);   // a rotation moves the notch to another edge
+            this.readInsets = readInsets;
+            root.RegisterCallback<GeometryChangedEvent>(OnGeometry);   // a rotation usually moves the notch with the bounds
+            // ...but not always: two landscapes of the same dimensions swap the notch side with the root bounds
+            // unchanged and no event fires, so poll every frame; Apply writes only on a change.
+            poll = root.schedule.Execute(Update).Every(0);
             Update();
         }
 
@@ -26,6 +34,7 @@ namespace Statecraft.Game.UI
 
         public void Update()
         {
+            if (readInsets != null) { var v = readInsets(); Apply(v.l, v.r, v.t, v.b); return; }
             var panel = root.panel;
             if (panel == null) return;
             float scale = panel.scaledPixelsPerPoint;
@@ -61,6 +70,7 @@ namespace Statecraft.Game.UI
 
         public void Dispose()
         {
+            poll?.Pause(); poll = null;
             root.UnregisterCallback<GeometryChangedEvent>(OnGeometry);
             root.style.paddingLeft = StyleKeyword.Null; root.style.paddingRight = StyleKeyword.Null;
             root.style.paddingTop = StyleKeyword.Null; root.style.paddingBottom = StyleKeyword.Null;
