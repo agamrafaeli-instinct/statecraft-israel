@@ -669,7 +669,7 @@ public class PromoScreensTests
     /// minimap (over the info panel, which it is drawn above), and nothing on it leaves it or its panel sideways; every
     /// one-line text fits its box.</summary>
     [UnityTest]
-    public IEnumerator BothScreensFitEveryWindowShape()
+    public IEnumerator BothScreensFitEveryWindowShape([Values(100, 125, 150)] int uiScale)   // #40: at the Settings scale choices
     {
         var g = GameSession.New(C, GoldenRun.Seed, Mode.Historical);
         var problems = new List<string>();
@@ -678,6 +678,7 @@ public class PromoScreensTests
             var rt = new RenderTexture(w, h, 0);
             var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
             ps.targetTexture = rt;
+            if (uiScale != 100) ps.referenceResolution = new Vector2(1920f * 100f / uiScale, 1080f * 100f / uiScale);   // #40
             var go = new GameObject("ScreensTest");
             go.SetActive(false);
             var doc = go.AddComponent<UIDocument>();
@@ -702,7 +703,9 @@ public class PromoScreensTests
                     var where = $"{w}x{h} {s}";
                     var screen = root.Q("screen-" + s); var sr = screen.worldBound;
                     if (!(sr.width > 300)) { problems.Add($"{where}: the screen is {sr}"); continue; }
-                    if (sr.yMin < root.Q("top-bar").worldBound.yMax - 0.5f) problems.Add($"{where}: starts over the top bar");
+                    // #40: on the tight three-row HUD a screen takes the whole window (the mobile-modal pattern).
+                    var fullWindowScreens = root.Q("root").ClassListContains(HudPresenter.TightClass) && root.Q("root").ClassListContains(HudPresenter.ThreeRowClass);
+                    if (!fullWindowScreens && sr.yMin < root.Q("top-bar").worldBound.yMax - 0.5f) problems.Add($"{where}: starts over the top bar");
                     // Clear of the minimap column, or (two-row HUD, #210) full width with the column hidden.
                     var column = root.Q("right-column");
                     if (column.resolvedStyle.display != DisplayStyle.None && sr.Overlaps(column.worldBound)) problems.Add($"{where}: overlaps the minimap column {column.worldBound}");

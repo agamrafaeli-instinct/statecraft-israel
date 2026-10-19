@@ -61,12 +61,13 @@ public class LeftColumnTests
     /// navigation, the decision card (open when the session has an event), the info panel on Lydda's hex, the minimap and the
     /// border caption. <paramref name="photos"/>: the card shows its event's photograph (the taller card).</summary>
     static IEnumerator Rendered(int w, int h, bool hebrew, GameSession g, System.Action<VisualElement, ScreenNav> check, System.Action<VisualElement, ScreenNav>? act = null,
-                                EventImageCatalog? photos = null)
+                                EventImageCatalog? photos = null, int uiScale = 100)
     {
         var text = hebrew ? He : En;
         var rt = new RenderTexture(w, h, 0);
         var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
         ps.targetTexture = rt;
+        if (uiScale != 100) ps.referenceResolution = new Vector2(1920f * 100f / uiScale, 1080f * 100f / uiScale);   // #40: the panel as the Settings scale choice sets it
         var go = new GameObject("LeftColumnTest");
         go.SetActive(false);
         var doc = go.AddComponent<UIDocument>();
@@ -134,7 +135,7 @@ public class LeftColumnTests
     /// px with no caption showing, clear of the info panel, the decision card and its backdrop, the minimap column and the
     /// border caption, and the toast.</summary>
     [UnityTest]
-    public IEnumerator TheColumnFitsEveryWindowInEnglishAndHebrew()
+    public IEnumerator TheColumnFitsEveryWindowInEnglishAndHebrew([Values(100, 125, 150)] int uiScale)   // #40: at the Settings scale choices
     {
         var problems = new List<string>();
         var g = WithAnEventOpen();
@@ -164,7 +165,7 @@ public class LeftColumnTests
                                                       ("the border caption", root.Q("map-layer").worldBound) })
                         if (r.Overlaps(hull)) problems.Add($"{at}: the column {hull} overlaps {name} {r}");
                     if (!root.Q(Column).enabledInHierarchy) problems.Add($"{at}: the column is disabled under the open card (the top bar is not)");
-                });
+                }, uiScale: uiScale);
         Assert.IsEmpty(problems, string.Join("\n", problems));
     }
 

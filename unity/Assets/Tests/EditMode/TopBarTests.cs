@@ -57,12 +57,13 @@ public class TopBarTests
     /// score in the plate. <paramref name="widest"/> false keeps the turn-1 values. <paramref name="collapsed"/> (with
     /// <paramref name="withEvent"/>) hides the open card to its "Decision waiting" button, as Hide does.</summary>
     static IEnumerator Rendered(int w, int h, bool hebrew, System.Action<VisualElement, UiText> check, bool widest = true, bool withEvent = false,
-                                bool collapsed = false)
+                                bool collapsed = false, int uiScale = 100)
     {
         var text = hebrew ? He : En;
         var rt = new RenderTexture(w, h, 0);
         var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
         ps.targetTexture = rt;
+        if (uiScale != 100) ps.referenceResolution = new Vector2(1920f * 100f / uiScale, 1080f * 100f / uiScale);   // #40: the panel as the Settings scale choice sets it
         var go = new GameObject("TopBarTest");
         go.SetActive(false);
         var doc = go.AddComponent<UIDocument>();
@@ -168,7 +169,7 @@ public class TopBarTests
     /// at the bar's right end, End Turn at its left); and every panel under the bar, and under the hanging plate, starts below
     /// them.</summary>
     [UnityTest]
-    public IEnumerator TheBarFitsEveryWindowInEnglishAndHebrew()
+    public IEnumerator TheBarFitsEveryWindowInEnglishAndHebrew([Values(100, 125, 150)] int uiScale)   // #40: at the Settings scale choices
     {
         var problems = new List<string>();
         foreach (var hebrew in new[] { false, true })
@@ -226,7 +227,7 @@ public class TopBarTests
                         if (r.xMin < plate.xMax && r.xMax > plate.xMin && r.yMin < plate.yMax - 0.5f && name != "event-layer" && name != "right-column")
                             problems.Add($"{at}: {name} {r} starts under the hanging plate {plate}");
                     }
-                });
+                }, uiScale: uiScale);
         Assert.IsEmpty(problems, string.Join("\n", problems));
     }
 

@@ -119,7 +119,7 @@
                 <Statecraft.Game.UI.UiFrame filigree="true" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="info-panel" class="panel info-panel">
+        <ui:ScrollView name="info-panel" class="panel info-panel">
             <!-- The selected hex's terrain sign on its map colour, beside its real facts (no tile yields: owner ruling). -->
             <Statecraft.Game.UI.UiIcon name="info-thumb" class="info-thumb" />
             <ui:VisualElement class="info-body">
@@ -143,7 +143,7 @@
                  second column beside the hex's facts, under them on the two- and three-row HUD (Statecraft.uss .info-gdd). -->
             <ui:VisualElement name="info-gdd" class="info-gdd" />
             <Statecraft.Game.UI.UiFrame filigree="true" />
-        </ui:VisualElement>
+        </ui:ScrollView>
         <!-- The decision layer under the top bar (decision cards, 2026-10-13): while an event is open a dim backdrop blocks the
              map and the panels under it, and the card sits in the middle, up to 1040 px wide, with a 16:9 media header (the
              event's photograph). Hidden under the start screen and any open screen (ScreenNav.DisableCovered). -->

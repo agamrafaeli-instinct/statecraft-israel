@@ -839,3 +839,73 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
 .lang-he .info-gdd Button { margin: 2px 0 2px 6px; }
 .hud-two-row .info-panel.info-gdd-shown { width: 520px; flex-wrap: wrap; }
 .hud-two-row .info-gdd { width: 100%; margin: 8px 0 0 0; padding: 8px 0 0 0; border-left-width: 0; border-right-width: 0; border-top-width: 1px; }
+
+/* The tight HUD (#40, the UI scale's 125% and 150% - HudPresenter.TightClass): a window at 125% or 150% has a logical
+   size smaller than any the 100% layout is tested at, in both directions at once (1920x1080 at 150% is 1280x720
+   logical). The stacked bar, the icon column, the decision layer and the panels take their tight sizes below, so the
+   HUD holds at those sizes. The bounds (HudPresenter.TightBelowHeightPx and friends) sit between the smallest sizes the
+   100% suites pin and the sizes only a scale choice reaches: nothing here ever applies at 100%. */
+/* The bar keeps its tier shapes, tightened: the rows the tiers wrap, at sizes the small logical height can pay. The
+   three-row height is a floor the rows can outgrow (HudPresenter.PlaceUnderBar, TightThreeRowBarPx). */
+.hud-tight.hud-narrow .top-bar { height: 96px; }
+.hud-tight.hud-two-row .top-bar { height: 172px; }
+.hud-tight.hud-three-row .top-bar { height: 200px; }
+.hud-tight .top-bar { padding-top: 4px; padding-bottom: 3px; }
+.hud-tight .meter { min-width: 0; padding: 0 4px; }
+.hud-tight .meter-value { font-size: 16px; }
+.hud-tight .meter-delta { font-size: 12px; }
+.hud-tight.hud-narrow .right-column, .hud-tight.hud-narrow .left-column, .hud-tight.hud-narrow .event-gutter, .hud-tight.hud-narrow .event-layer, .hud-tight.hud-narrow .screen, .hud-tight.hud-narrow .toast { top: 108px; }
+.hud-tight.hud-two-row .right-column, .hud-tight.hud-two-row .left-column, .hud-tight.hud-two-row .event-gutter, .hud-tight.hud-two-row .event-layer, .hud-tight.hud-two-row .screen, .hud-tight.hud-two-row .toast { top: 184px; }
+.hud-tight.hud-three-row .right-column, .hud-tight.hud-three-row .left-column, .hud-tight.hud-three-row .event-gutter, .hud-tight.hud-three-row .event-layer, .hud-tight.hud-three-row .screen, .hud-tight.hud-three-row .toast { top: 212px; }
+/* The icon column: 40 px discs, 4 px apart, so six of them end at 372 px under the tight narrow bar and 448 px under
+   the tight two-row one, and the info panel caps below them. On the tight three-row window they become a row instead
+   (below). */
+.hud-tight .left-column { width: 46px; }
+.hud-tight .left-column .rail-button { width: 40px; height: 40px; margin: 0 0 4px 0; }
+.hud-tight .left-column .rail-button .nav-disc { width: 40px; height: 40px; padding: 9px; border-radius: 20px; }
+/* On the tight three-row bar the column is a ROW under it: six upright discs would not fit between the bar and the
+   window's foot (853x480 logical at 150%), while a row takes only 48 px of height and the 44 px discs keep their 24
+   screen px floor. The panels below it start under the row (top 260 px). */
+.hud-tight.hud-three-row .left-column { left: 16px; right: 208px; top: 212px; width: auto; flex-direction: row; align-items: flex-start; }
+.hud-tight.hud-three-row .left-column > .rail-button { width: 44px; height: 44px; margin: 0 4px 0 0; }
+.lang-he.hud-tight.hud-three-row .left-column { flex-direction: row-reverse; }
+.lang-he.hud-tight.hud-three-row .left-column > .rail-button { margin: 0 0 0 4px; }
+.hud-tight.hud-three-row .left-column > .rail-button .nav-disc { width: 44px; height: 44px; padding: 10px; border-radius: 22px; }
+.hud-tight.hud-three-row .right-column, .hud-tight.hud-three-row .event-layer, .hud-tight.hud-three-row .toast { top: 260px; }
+/* A screen on the tight three-row window takes the window (the mobile-modal pattern): the tight bar and the rail row
+   leave no usable strip for one at 853x480 logical (150% on 1280x720). The rail and the bar wait under it; the screen's
+   own X closes it (ScreenNav). The two-row rule already hides the right column and the info panel while one is open. */
+.hud-tight.hud-three-row .screen { top: 8px; left: 8px; right: 8px; bottom: 8px; }
+.hud-tight.hud-three-row .event-gutter { top: 212px; bottom: auto; height: 52px; width: auto; left: 0; right: 0; }
+/* The backdrop's strip and its scrim start at the tight column's right edge; the band over the bar-to-layer gap narrows
+   to the tight gap (12 px). On the tight three-row window the column is the rail row: the strip becomes the band over the
+   rail's whole zone (bar bottom to layer top, the 60 px), still under the buttons, and the scrim spans the window. */
+.hud-tight .event-gutter { width: 62px; }
+.hud-tight .event-scrim { left: 46px; }
+.hud-tight .event-scrim-top { top: -12px; height: 12px; }
+.hud-tight.hud-three-row .event-gutter { top: 200px; bottom: auto; left: 0; right: 0; width: auto; height: 60px; }
+.hud-tight.hud-three-row .event-scrim { left: -16px; }
+.hud-tight.hud-three-row .event-scrim-top { top: -60px; height: 60px; }
+/* The decision card starts right of the tight column (the three-row rule's reason, now at every tight tier): the
+   column's 46 px at the layer's 16 px, so a narrow window never lays the card over it. */
+.hud-tight .event-layer { padding-left: 54px; }
+.hud-tight.hud-three-row .event-layer { padding-left: 0; }
+/* The info panel never rises into the column: under the tight narrow and two-row bars it is capped below the column's
+   end (372 px and 448 px, with the 16 px margin); under the tight three-row bar it starts below the rail row and keeps
+   clear of the shrunken minimap (170 px). Content taller than the cap scrolls: the panel is a ScrollView now
+   (Game.uxml), its rows laid out by the scroll content container. */
+.info-panel .unity-scroll-view__content-container { flex-direction: row; align-items: flex-start; }
+.hud-two-row .info-panel.info-gdd-shown .unity-scroll-view__content-container { flex-wrap: wrap; }
+.hud-tight.hud-narrow .info-panel { max-height: calc(100% - 388px); }
+.hud-tight.hud-two-row .info-panel { max-height: calc(100% - 464px); }
+.hud-tight.hud-three-row .info-panel { left: 16px; max-width: calc(100% - 234px); max-height: calc(100% - 276px); }
+/* The minimap shrinks with the tight three-row window (MinimapPresenter fits the picture to the box). */
+.hud-tight.hud-three-row .minimap { width: 170px; height: 288px; }
+.hud-tight.hud-three-row .minimap-button, .hud-tight.hud-three-row .minimap-button .minimap-disc { width: 40px; height: 40px; }
+.hud-tight.hud-three-row .minimap-button .minimap-disc { padding: 9px; border-radius: 20px; }
+/* The Cabinet on a tight window: a slimmer side column and a smaller half circle, so the seats list keeps its room. */
+.hud-tight .cabinet-side { width: 220px; }
+.hud-tight .pm-card .card-plate { height: 180px; }
+.hud-tight .cabinet-house { padding: 6px 10px; margin-bottom: 6px; }
+.hud-tight .screen { padding: 10px; }
+.hud-tight .screen-header { margin-bottom: 6px; padding-bottom: 2px; }

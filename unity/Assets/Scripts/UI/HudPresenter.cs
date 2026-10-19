@@ -50,6 +50,20 @@ namespace Statecraft.Game.UI
         /// wrapped to two lines, #380), then the screen buttons and End Turn (Statecraft.uss .hud-three-row; #210).</summary>
         public const float ThreeRowBelowPx = 1100f;
         public const string ThreeRowClass = "hud-three-row";
+
+        /// <summary>The tight HUD (#40, the UI scale's 125% and 150%): a window at 125% or 150% has a logical size smaller
+        /// than any the 100% layout is tested at, in both directions at once (1920x1080 at 150% is 1280x720 logical; a
+        /// 360x800 phone at 150% is 644 px wide). Then the stacked bar, the icon column and the panels take their tight
+        /// sizes (Statecraft.uss .hud-tight). The bounds sit between the smallest sizes the 100% suites pin (1247 px tall
+        /// at 1024x768, 1821 wide at 960x600, 979 wide at 390x844, all clear of them) and the sizes only a scale choice
+        /// reaches, so no tested 100% window ever goes tight.</summary>
+        public const string TightClass = "hud-tight";
+        public const float TightBelowHeightPx = 1200f, TightAndBelowWidthPx = 1700f, TightBelowWidthPx = 960f;
+        /// <summary>Statecraft.uss .hud-tight.hud-three-row .top-bar height: the tight three-row bar's rows.</summary>
+        public const float TightThreeRowBarPx = 200f;
+        /// <summary>The floor's cap in the tight HUD (#40): the player's 125%/150% choice already enlarges the text on
+        /// screen, so the floor's reason is met, and the full raise is what breaks the small logical bar.</summary>
+        public const float TightSmallMaxPx = 18f;
         /// <summary>On the one-row bar, when the meters leave enough room, the bar gets RoomyClass: promo-sized icons (38 px)
         /// and values (25 px) (Statecraft.uss .top-bar--roomy). It turns on only when the measured spare room covers the
         /// predicted growth (RoomyGrowth) plus SpareShare, and off when the spare room falls below SpareShare, so it never
@@ -100,6 +114,7 @@ namespace Statecraft.Game.UI
         public const float PlateSidePx = 18f, PlateEdgePx = 9f;
         readonly VisualElement turnBox;
         readonly IVisualElementScheduledItem floorCheck;
+        readonly EventCallback<GeometryChangedEvent> onRootGeometry;
         float smallTextSize = SmallTextPx;
 
         /// <summary>The left icon column (promo 03): the screens' buttons (ScreenNav.Screens).</summary>
@@ -169,6 +184,8 @@ namespace Statecraft.Game.UI
             ApplyTextFloor();
             floorCheck = root.schedule.Execute(ApplyTextFloor).Every(500);
             SetCompact(bar.layout.width);   // the bar may already be laid out (the loading screen shows it) and never resize
+            onRootGeometry = _ => SetTight();   // the window, not only the bar, can cross the tight bounds
+            hudRoot.RegisterCallback(onRootGeometry);
             bridge.Changed += Render;
             Render();
         }
@@ -187,6 +204,8 @@ namespace Statecraft.Game.UI
             if (dateRow != null) { dateRow.style.flexDirection = StyleKeyword.Null; if (dateRow.parent != null) PadPlate(dateRow.parent, false); }
             bridge.Changed -= Render; endTurn.clicked -= onEndTurn; endTurn.generateVisualContent -= PaintHourglass;
             bar.UnregisterCallback<GeometryChangedEvent>(OnBarGeometry);
+            hudRoot.UnregisterCallback(onRootGeometry);
+            hudRoot.RemoveFromClassList(TightClass);
             dateRow?.parent?.UnregisterCallback<GeometryChangedEvent>(OnPlateGeometry);
             foreach (var m in meters) m.UnregisterCallback<GeometryChangedEvent>(OnMeterGeometry);
             bar.RemoveFromClassList(RoomyClass);
@@ -241,6 +260,7 @@ namespace Statecraft.Game.UI
             var p = root.panel;
             if (p == null) return;
             var size = SmallTextSize(p.scaledPixelsPerPoint / DevicePixelRatio());
+            if (hudRoot.ClassListContains(TightClass) && size > TightSmallMaxPx) size = TightSmallMaxPx;   // the scale itself raises the text (#40)
             if (size == smallTextSize) return;
             smallTextSize = size;
             SetCompact(bar.layout.width);
@@ -339,8 +359,10 @@ namespace Statecraft.Game.UI
         void PlaceUnderBar()
         {
             // A hidden bar (the start screen) moves nothing: the start screen's toast keeps its own top (review of #859).
-            var rows = hudRoot.ClassListContains(ThreeRowClass) && bar.resolvedStyle.display != DisplayStyle.None ? RowsHeight() : 0f;
-            var grown = rows - ThreeRowBarPx;
+            var threeRow = hudRoot.ClassListContains(ThreeRowClass);
+            var basePx = threeRow && hudRoot.ClassListContains(TightClass) ? TightThreeRowBarPx : ThreeRowBarPx;
+            var rows = threeRow && bar.resolvedStyle.display != DisplayStyle.None ? RowsHeight() : 0f;
+            var grown = rows - basePx;
             bar.style.height = grown > 0.5f ? new StyleLength(rows) : new StyleLength(StyleKeyword.Null);
             var margin = grown > 0.5f ? new StyleLength(grown) : new StyleLength(StyleKeyword.Null);
             foreach (var e in underBar) e.style.marginTop = margin;
@@ -373,6 +395,19 @@ namespace Statecraft.Game.UI
         static float DevicePixelRatio() => 1f;
 #endif
 
+        /// <summary>Tight only when the logical window is smaller than every tested 100% window (TightClass): read from
+        /// the root's laid-out size, so it follows the panel's scale by itself. A change re-reads the floor (its cap
+        /// changes) and re-picks the tier (FloorGrowth changes with the capped text).</summary>
+        void SetTight()
+        {
+            var r = root.worldBound;
+            if (float.IsNaN(r.width) || r.width <= 0f) return;
+            var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx;
+            if (hudRoot.ClassListContains(TightClass) == tight) return;
+            hudRoot.EnableInClassList(TightClass, tight);
+            ApplyTextFloor();
+        }
+
         void SetCompact(float width)
         {
             if (!(width > 0)) return;   // NaN before layout: wait for it
@@ -384,6 +419,7 @@ namespace Statecraft.Game.UI
             hudRoot.EnableInClassList(ThreeRowClass, width < ThreeRowBelowPx);
             StyleSmallText(raised);
             PlaceUnderBar();
+            SetTight();
             ScreenNav.DisableCovered(hudRoot);   // two rows or one: what an open screen covers changes with it (#400)
         }
 

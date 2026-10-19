@@ -34,12 +34,13 @@ public class InfoPanelLayoutTests
     /// <summary>The real Game.uxml on the real PanelSettings at w x h, out of its loading state, with the top bar, an open event
     /// card and the info panel (with the region lines) on the session given.</summary>
     static IEnumerator Rendered(int w, int h, GameSession g, System.Action<VisualElement, InfoPanelPresenter> act, System.Action<VisualElement> check,
-                                UiText? text = null, bool hebrew = false)
+                                UiText? text = null, bool hebrew = false, int uiScale = 100)
     {
         var t = text ?? Text;
         var rt = new RenderTexture(w, h, 0);
         var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
         ps.targetTexture = rt;
+        if (uiScale != 100) ps.referenceResolution = new Vector2(1920f * 100f / uiScale, 1080f * 100f / uiScale);   // #40: the panel as the Settings scale choice sets it
         var go = new GameObject("InfoPanelTest");
         go.SetActive(false);
         var doc = go.AddComponent<UIDocument>();
@@ -65,6 +66,15 @@ public class InfoPanelLayoutTests
             info.Dispose(); card.Dispose(); hud.Dispose();
             Object.DestroyImmediate(go); Object.DestroyImmediate(ps); rt.Release(); Object.DestroyImmediate(rt);
         }
+    }
+
+    /// <summary>#40: the panel is a ScrollView now: a label may run past its bottom edge only when the panel scrolls to it
+    /// (the Cabinet list's pattern). Sideways and upward it must always stay inside.</summary>
+    static bool InsideOrScrollsTo(Rect r, ScrollView panel)
+    {
+        var p = panel.worldBound;
+        if (r.xMin < p.xMin - 0.5f || r.xMax > p.xMax + 0.5f || r.yMin < p.yMin - 0.5f) return false;
+        return r.yMax <= p.yMax + 0.5f || panel.verticalScroller.highValue > 0f;
     }
 
     /// <summary>A label's text fits its box: on one line, or wrapped within its height.</summary>
@@ -104,7 +114,7 @@ public class InfoPanelLayoutTests
     /// its box, the panel lies in the window, and it overlaps neither the minimap nor the event card (unless the card's backdrop
     /// covers it, the panel disabled under it), at every window size.</summary>
     [UnityTest]
-    public IEnumerator InfoPanelTextStaysInsideThePanel()
+    public IEnumerator InfoPanelTextStaysInsideThePanel([Values(100, 125, 150)] int uiScale)   // #40: at the Settings scale choices
     {
         var g = WithAnEventOpen();
         var lod = C.SettlementHexes.Single(s => s.Id == "lod");
@@ -125,10 +135,10 @@ public class InfoPanelLayoutTests
                     problems.Add($"{w}x{h}: the panel {panel.worldBound} overlaps the event card {root.Q("event-card").worldBound} with no backdrop over it");
                 foreach (var l in panel.Query<Label>().ToList().Where(l => !string.IsNullOrEmpty(l.text) && Shown(l)))
                 {
-                    if (!Inside(l.worldBound, panel.worldBound)) problems.Add($"{w}x{h}: '{l.text}' {l.worldBound} leaves the panel {panel.worldBound}");
+                    if (!InsideOrScrollsTo(l.worldBound, root.Q<ScrollView>("info-panel"))) problems.Add($"{w}x{h}: '{l.text}' {l.worldBound} leaves the panel {panel.worldBound}");
                     if (!TextFits(l)) problems.Add($"{w}x{h}: '{l.text}' does not fit its box {l.contentRect} ({l.name})");
                 }
-            });
+            }, uiScale: uiScale);
         Assert.IsEmpty(problems, string.Join("\n", problems));
     }
 
@@ -137,7 +147,7 @@ public class InfoPanelLayoutTests
     /// the panel lies in the window, clear of the minimap, the left column and the top bar, and every shown label and
     /// button lies inside the panel with its text fitting its box.</summary>
     [UnityTest]
-    public IEnumerator TheGddCityAndSitePanelsFitEveryWindow()
+    public IEnumerator TheGddCityAndSitePanelsFitEveryWindow([Values(100, 125, 150)] int uiScale)   // #40: at the Settings scale choices
     {
         var he = UiText.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>(UiPaths.StringsHebrew).text, "strings.he.yaml");
         var city = C.SettlementHexes.Single(s => s.Id == "tel_aviv");
@@ -161,10 +171,10 @@ public class InfoPanelLayoutTests
                             if (panel.worldBound.Overlaps(root.Q(other).worldBound)) problems.Add($"{at}: the panel {panel.worldBound} overlaps the {other} {root.Q(other).worldBound}");
                         foreach (var l in panel.Query<TextElement>().ToList().Where(l => !string.IsNullOrEmpty(l.text) && Shown(l)))
                         {
-                            if (!Inside(l.worldBound, panel.worldBound)) problems.Add($"{at}: '{l.text}' {l.worldBound} leaves the panel {panel.worldBound}");
+                            if (!InsideOrScrollsTo(l.worldBound, root.Q<ScrollView>("info-panel"))) problems.Add($"{at}: '{l.text}' {l.worldBound} leaves the panel {panel.worldBound}");
                             if (!TextFits(l)) problems.Add($"{at}: '{l.text}' does not fit its box {l.contentRect} ({l.name})");
                         }
-                    }, hebrew ? he : Text, hebrew);
+                    }, hebrew ? he : Text, hebrew, uiScale);
                 }
         Assert.IsEmpty(problems, string.Join("\n", problems));
     }

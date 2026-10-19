@@ -8,6 +8,13 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 ## [Unreleased]
 
 ### Added
+- The HUD holds at the Settings screen's 125% and 150% UI scales (#40): below the smallest window the 100% layout is
+  tested at (HudPresenter's new hud-tight, set from the panel's logical size, so only a scale choice reaches it) the
+  bar's rows, the icon column and the panels tighten; on the tight three-row window the icon column becomes a row under
+  the bar and a screen takes the window like a mobile modal. The decision card starts right of the tight column; the
+  info panel is a scrolling panel capped clear of the column; the Cabinet's side column slims so the seats list keeps
+  its room; and the small-text floor caps at 18 px (the scale choice itself enlarges the text on screen). The seven
+  layout suites that failed at 125%/150% now run at all three scales.
 - The Cabinet disc in the side menu shows a small gold badge while a post is vacant that the player can fill this turn,
   and its tip says so in English and Hebrew. The sim's `Cabinet.Vacancies` decides it (a vacant seat, someone may be
   appointed, no appointment to it queued, the game not over, and enough Attention left after this turn's queued orders,
