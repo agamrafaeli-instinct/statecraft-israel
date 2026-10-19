@@ -9,6 +9,46 @@ namespace Statecraft.Sim
 
     public sealed class Source { public string Url { get; set; } = ""; public DateTime Checked { get; set; } }
 
+    public sealed class MapLocationControlChange
+    {
+        public DateTime Date { get; set; }
+        public string Control { get; set; } = "";
+        public List<Source> Sources { get; set; } = new List<Source>();
+    }
+
+    /// <summary>A named place on the GDD v0.2 map roster. This is map metadata, not a city, capture target or build site;
+    /// those roles are explicit booleans so map inclusion cannot silently grant gameplay behavior.</summary>
+    public sealed class MapLocation
+    {
+        public string Id { get; set; } = "";
+        /// <summary>The period-appropriate display name.</summary>
+        public string Name { get; set; } = "";
+        /// <summary>The Hebrew display name the Hebrew UI's map label shows, with its own sources (as settlements_1948.yaml's name_he).</summary>
+        public string NameHe { get; set; } = "";
+        /// <summary>"agent-checked" while no person has read the Hebrew name (CONTENT_POLICY section 2, rule 6); empty once reviewed.</summary>
+        public string NameHeReview { get; set; } = "";
+        public List<Source> NameHeSources { get; set; } = new List<Source>();
+        public string Kind { get; set; } = "";
+        public double Lon { get; set; }
+        public double Lat { get; set; }
+        public int Q { get; set; }
+        public int R { get; set; }
+        public string Priority { get; set; } = "";
+        public bool Marker { get; set; }
+        public bool ManagedCity { get; set; }
+        public bool DesignatedSite { get; set; }
+        public bool SettlementControlTarget { get; set; }
+        /// <summary>Optional sourced holder at the campaign start. Empty where this issue does not establish one.</summary>
+        public string StartingControl { get; set; } = "";
+        public DateTime ControlDate { get; set; }
+        /// <summary>An optional sourced later historical control, recorded as metadata only.</summary>
+        public MapLocationControlChange? ControlChange { get; set; }
+        /// <summary>An optional sourced historical reference, never an availability or unlock rule.</summary>
+        public string HistoricalReference { get; set; } = "";
+        public List<Source> Sources { get; set; } = new List<Source>();
+        public string Status { get; set; } = "";
+    }
+
     /// <summary>The shape of a sign-off's `reviewed_by`: a GitHub handle (letters and digits, single hyphens between them,
     /// at most 39 characters, and at least one letter, so a bare number such as 1234 reads the same in every reader), so never an email, an @-name, a display name or a bot account ("name[bot]"). Shared with
     /// the map's readers in Unity.</summary>
@@ -467,6 +507,15 @@ namespace Statecraft.Sim
         public int PeoplePerUnit { get; set; }
         /// <summary>Money each employed unit earns a year, in IL millions (R-CITY-002).</summary>
         public double IncomePerJobPerYear { get; set; }
+        /// <summary>What an employed craftsman earns, as a multiple of <see cref="IncomePerJobPerYear"/> (R-CRAFT-002, Q-CRAFT-2).</summary>
+        public double CraftsmanIncomeMultiple { get; set; }
+        /// <summary>Annual civilian-place upkeep in IL millions (R-MONEY-002). Required in the GDD loop; the MVP values are 0.</summary>
+        public double? CityUpkeepPerYear { get; set; }
+        public double? HousingUpkeepPerYear { get; set; }
+        public double? IndustryUpkeepPerYear { get; set; }
+        public double? TransitCampUpkeepPerYear { get; set; }
+        public double? MilitaryCampUpkeepPerYear { get; set; }
+        public double? HakhsharaUpkeepPerYear { get; set; }
         /// <summary>The day the cities start taking arrivals: the census day their start values count (R-CITY-003, Q-ARRV-3).</summary>
         public DateTime CityArrivalsFrom { get; set; }
         /// <summary>The day the GDD game ends (R-LOOP-004; D-E5, 15 January 1952 in the real content), or null for the last
@@ -525,6 +574,12 @@ namespace Statecraft.Sim
         /// <summary>The debt, in IL millions, at or above which Money is exhausted (R-END-001; D-B5, Q-DEF-1). Required in the
         /// GDD loop, a finite number >= 0.</summary>
         public double? DebtCeiling { get; set; }
+        /// <summary>A minister whose loyalty is below this carries a delegated decision out half-heartedly (R-EVT-003; #107,
+        /// owner, 18 October 2026). Required in the GDD loop, 0 to 10 (0: nobody is below it).</summary>
+        public int? DelegationLoyaltyFloor { get; set; }
+        /// <summary>The share of each numeric effect a delegated option applies when its minister is below the loyalty floor
+        /// (R-EVT-003; #107). Required in the GDD loop, 0 to 1.</summary>
+        public double? DisloyalEffectShare { get; set; }
     }
 
     /// <summary>A kind of city project (projects.yaml; GDD "Cities and construction"; R-PROJ-001 to R-PROJ-003): permanent
@@ -544,6 +599,9 @@ namespace Statecraft.Sim
         public double Condition { get; set; }
         /// <summary>Job slots added to the city when done, in population units.</summary>
         public int JobSlots { get; set; }
+        /// <summary>A city resource the city must have (cities.yaml `resources:`), or "" for none: a specialised industry such as
+        /// the winery, which needs vineyards (R-PROJ-005, D-D8).</summary>
+        public string Requires { get; set; } = "";
     }
 
     /// <summary>A designated site (sites.yaml; docs/GDD.md "Pioneer work": building is allowed only at designated spots, and a
@@ -593,6 +651,16 @@ namespace Statecraft.Sim
         public List<Source> Sources { get; set; } = new List<Source>();
     }
 
+    /// <summary>A city's local resource (cities.yaml `resources:`; R-PROJ-005, D-D8: "A winery requires areas for grapes"): an
+    /// id a project kind's `requires` names, its sources (each with a url and a checked date), and what the sources leave
+    /// open (`to_verify`, as in map/routes_1948.yaml).</summary>
+    public sealed class CityResource
+    {
+        public string Id { get; set; } = "";
+        public List<Source> Sources { get; set; } = new List<Source>();
+        [YamlMember(Alias = "to_verify")] public string ToVerify { get; set; } = "";
+    }
+
     /// <summary>A city's start values (cities.yaml, GDD "Cities and construction"). The file gives people and shares, each
     /// with its status (R-CITY-006); the loader turns them into the population units the sim counts (D-A1, R-CITY-007).</summary>
     public sealed class CityStart
@@ -609,6 +677,8 @@ namespace Statecraft.Sim
         [YamlMember(Alias = "job_slots")] public CityValue? Jobs { get; set; }
         /// <summary>Training facilities in the city (military_camp, hakhshara). PR 4 uses them (D-D5).</summary>
         public List<string> Facilities { get; set; } = new List<string>();
+        /// <summary>The city's local resources (R-PROJ-005, D-D8), each sourced, which a specialised project may require.</summary>
+        public List<CityResource> Resources { get; set; } = new List<CityResource>();
 
         // The units the sim starts from, set by the loader (R-CITY-007).
         [YamlIgnore] public int HousingCapacity { get; internal set; }
@@ -868,11 +938,28 @@ namespace Statecraft.Sim
         public string Card { get; set; } = "";
     }
 
-    /// <summary>What completes an objective (objectives.yaml completes_when). Phase 1 has one kind.</summary>
+    /// <summary>What completes an objective (objectives.yaml completes_when): exactly one kind.</summary>
     public sealed class ObjectiveCondition
     {
         /// <summary>A designated site (sites.yaml) of kind yishuv: complete once it is built (R-SITE-003).</summary>
         public string SiteBuilt { get; set; } = "";
+        /// <summary>The cities have absorbed the immigrants (R-OBJ-004, D-B4).</summary>
+        public AbsorbCondition? Absorbed { get; set; }
+    }
+
+    /// <summary>R-OBJ-004 (D-B4; owner, 18 October 2026, #738, option (a)): once the Jewish population has reached
+    /// <see cref="PopulationAtLeast"/>, the cities' overflow is at most <see cref="OverflowAtMost"/> of the people they house
+    /// and their employed civilians at least <see cref="EmployedAtLeast"/> of their civilians. The population gate keeps the
+    /// start values (already 41% employed, no overflow) from completing it on the first turn.</summary>
+    public sealed class AbsorbCondition
+    {
+        /// <summary>GameState.TotalPopulation, the national Jewish count, at or above this.</summary>
+        public long PopulationAtLeast { get; set; }
+        /// <summary>Overflow (R-HOUSE-002) over the housed people (R-HOUSE-003), at or below this share. Required: 0 is a
+        /// real value here, so a missing key must not read as 0.</summary>
+        public decimal? OverflowAtMost { get; set; }
+        /// <summary>Employed over civilians (as R-CITY-005 counts them), at or above this share.</summary>
+        public decimal EmployedAtLeast { get; set; }
     }
 
     /// <summary>One hex of content/map/hexes.json (written by tools/hexgrid.py; axial q, r, pointy-top).</summary>
@@ -894,6 +981,19 @@ namespace Statecraft.Sim
         public string Id { get; set; } = "";
         public int Q { get; set; }
         public int R { get; set; }
+    }
+
+    /// <summary>A curated settlement-control target (settlement_targets.yaml). The operation and sources are historical
+    /// evidence for including the place; no capture behaviour reads this record yet (R-CTRL-001).</summary>
+    public sealed class SettlementTarget
+    {
+        public string Id { get; set; } = "";
+        public int Q { get; set; }
+        public int R { get; set; }
+        public string Operation { get; set; } = "";
+        public List<Source> Sources { get; set; } = new List<Source>();
+        /// <summary>Required on every row; empty means the key was missing and is rejected by the loader.</summary>
+        public string Status { get; set; } = "";
     }
 
     public sealed class Content
@@ -993,6 +1093,10 @@ namespace Statecraft.Sim
             }
         }
         public List<SettlementHex> SettlementHexes = new List<SettlementHex>();
+        /// <summary>Named GDD map locations. Presentation metadata only; gameplay roles remain in their owning systems.</summary>
+        public List<MapLocation> MapLocations = new List<MapLocation>();
+        /// <summary>The curated settlement-control targets, in file order (R-CTRL-001).</summary>
+        public List<SettlementTarget> SettlementTargets = new List<SettlementTarget>();
         /// <summary>The display name of each settlement id (map/settlements_1948.yaml name), for text the player reads.</summary>
         public Dictionary<string, string> SettlementNames = new Dictionary<string, string>();
         /// <summary>The GDD cities' start values (cities.yaml), in file order. Empty in the legacy loop.</summary>

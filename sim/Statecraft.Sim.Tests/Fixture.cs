@@ -168,6 +168,9 @@ budget_start: { finance_minister: 1.0 }
         ["population.yaml"] = @"
 anchors: []
 ",
+        ["settlement_targets.yaml"] = @"
+targets: []
+",
         // A 5 x 2 map: one sea hex, the rest land; one settlement at (1, 0).
         ["map/hexes.json"] = @"{""attribution"":[""test""],""bounds"":{""lon0"":34.2,""lon1"":35.9,""lat0"":29.45,""lat1"":33.35},""hex_size_km"":5.0,""layout"":""pointy"",""hexes"":[
 {""q"":0,""r"":0,""lon"":34.2,""lat"":33.35,""elev_m"":0.0,""land"":false,""biome"":""sea""},
@@ -187,6 +190,25 @@ settlements:
         ["map/settlements_1948.yaml"] = @"
 settlements:
   - { id: town_a, name: Town A, lon: 34.29, lat: 33.35, type: town, founded: 1900, pre_modern: false }
+",
+        ["map/locations_1948.yaml"] = @"
+locations:
+  - id: town_a
+    name: Town A
+    name_he: עיר א
+    name_he_sources: [{ url: 'https://example.org/town-a-he', checked: 2026-10-18 }]
+    kind: city
+    lon: 34.29
+    lat: 33.35
+    q: 1
+    r: 0
+    priority: must_have
+    marker: true
+    managed_city: true
+    designated_site: false
+    settlement_control_target: false
+    sources: [{ url: 'https://example.org/town-a', checked: 2026-10-18 }]
+    status: draft
 ",
         ["aliyah.yaml"] = @"
 regions:
@@ -224,6 +246,13 @@ series:
 mvp:
   people_per_unit: 10
   income_per_job_per_year: 1.2
+  craftsman_income_multiple: 2
+  city_upkeep_per_year: 0
+  housing_upkeep_per_year: 0
+  industry_upkeep_per_year: 0
+  transit_camp_upkeep_per_year: 0
+  military_camp_upkeep_per_year: 0
+  hakhshara_upkeep_per_year: 0
   city_arrivals_from: 1948-05-15
   build_yishuv_turns: 3
   build_yishuv_cost: 1.5
@@ -245,6 +274,8 @@ mvp:
   overflow_condition_loss: 0.2
   defeat_turns: 3
   debt_ceiling: 10
+  delegation_loyalty_floor: 5
+  disloyal_effect_share: 0.5
 ";
 
     public static readonly string GddCities = "\ncities:\n" + City("town_a", 12, 8, 10, 6, "[military_camp, hakhshara]");
@@ -260,6 +291,7 @@ types:
   - { id: refugee, kind: population }
   - { id: recruit, kind: population, facility: military_camp, training_turns: 2, training_cost: 0.5 }
   - { id: halutz, kind: unit, facility: hakhshara, training_turns: 3, training_cost: 0.25 }
+  - { id: craftsman, kind: population, facility: industry, training_turns: 3, training_cost: 0.75 }
 ";
 
     /// <summary>The three city project kinds (R-PROJ-001). Fixture values, not the game's.</summary>
@@ -269,6 +301,12 @@ projects:
   - { id: transit_camp, name: a transit camp, cost: 1, turns: 1, capacity: 3, condition: -0.1, job_slots: 0 }
   - { id: industry, name: an industry project, cost: 2, turns: 2, capacity: 0, condition: 0, job_slots: 3 }
 ";
+
+    /// <summary>A city's resources key with vineyards and a fixture source (R-PROJ-005), to add to a <see cref="City"/> row.</summary>
+    public const string Vineyards = @"resources: [{ id: vineyards, sources: [{ url: ""https://example.org/vineyards"", checked: 2026-10-18 }], to_verify: a fixture note }]";
+
+    /// <summary>A projects.yaml kind that requires vineyards (R-PROJ-005), to add to <see cref="GddProjects"/>. Fixture values.</summary>
+    public const string Winery = "  - { id: winery, name: a winery, cost: 2, turns: 2, capacity: 0, condition: 0, job_slots: 6, requires: vineyards }\n";
 
     /// <summary>One designated site on a land hex next to town_a, with no settlement on it. Fixture values, not history.</summary>
     public const string GddSites = @"

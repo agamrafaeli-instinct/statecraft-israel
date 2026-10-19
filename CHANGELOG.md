@@ -8,10 +8,50 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 ## [Unreleased]
 
 ### Added
+- A short How to play screen in the side menu explains the monthly loop, Attention, cities, training, event decisions,
+  the top bar, End turn and delegation, and the Why screen in English and Hebrew (refs #1041, #42).
+- After End Turn, a short turn report names each top-bar number that changed, with the change the bar shows and its main
+  causes, the sim's own cause messages, and a link to the Why screen; hovering or tapping a top-bar number shows the same
+  explanation under the bar. English and Hebrew; no rule or number is computed in the UI (refs #1037).
+- The `displacement` event tag now has an absolute no-gain rule and blocks a shareable build until the event is
+  sensitivity-reviewed (R-EFX-007, R-GATE-001; refs #794). No content uses the tag, so no golden moves.
+- The settlement target list and the settlement-control state (GDD Phase 6 PR 3): `settlement_targets.yaml` admits
+  only sourced `arab_town` rows of `settlements_1948.yaml` and ships empty until a person and the sensitivity review
+  have checked its rows. The state is written into the state hash only when set, so no golden moves (R-CTRL-001 to
+  R-CTRL-003; refs #795).
 - The military unit record (GDD Phase 5 PR 2): a unit can hold a side, a strength and a standing order with its target,
   each written into the state hash only when set, so a halutz hashes as before and no golden moves. `unit_types.yaml`
   gains Israel's `veteran_soldier` (infantry), `artillery` and `armoured_car` (armour) with a `side` and a `class`; the
   loader refuses a military type without both (R-UNIT-001, R-UNIT-002; refs #741, #385). Nothing uses them yet.
+- Objectives can complete on absorbing the immigrants: `completes_when: { absorbed: ... }` holds once the Jewish
+  population has reached a stated number and then the cities' overflow and employed shares are inside stated bounds
+  (R-OBJ-004; owner's option (a) on #738). The real objective and its card come with a person's source check, so no
+  content uses it yet and no golden moves (refs #738, #383).
+- Farm and village life from MATKOT's 1948 Collection: three tractors by kibbutz fields, three horse wagons and three
+  draught horses by moshav and moshava fields, three flocks of five sheep and three donkeys by villages, and three camels
+  by Bedouin camp areas, each anchor chosen by a fixed hash and kept clear of the kits, routes, unit tokens, water,
+  civilians (#666) and wildlife (#670), with the kit trees over them left out.
+  They stand at the #700 buildings' one world scale (24x real: a tractor about a third of the steam train's locomotive,
+  a sheep about a seventh), stream after the first frame, and play their idle clip only at close zoom (40 km) (#667).
+- MATKOT's Tegart fort, military barracks and factory models stand at their sourced places from their sourced days,
+  close up only (#700's switch): the Latrun police fort from 15 May 1948, the Tzrifin camp from 19 May 1948, Camp 80
+  from 13 July 1948 and Netanya's industrial zone from 28 July 1950, clear of the towns, routes, unit tokens, civilians
+  (#666) and wildlife (#670), with the kit trees on them left out. They are sized at the #700 buildings' one world
+  scale (24x real, an 8.5 m house as long as the steam train's locomotive), and stream after the first frame in a new
+  `collection-special-buildings` bundle with the shikun and the workshop, which stay unplaced until a place and date are
+  sourced (refs #707).
+- The craftsman and the job default (GDD Phase 3 PR 5; R-CRAFT-001, R-CRAFT-002, R-CITY-009; #736): a civilian trains
+  as a craftsman in a city with a completed industry project (3 turns, IL 0.5m a group), fills an ordinary job slot and
+  earns twice the job income, all labelled design values (Q-CRAFT-1 to Q-CRAFT-3). Each city's free jobs now fill on the
+  housing step at no Attention cost until an `AssignWorkers` order fixes that city's number (Q-JOBS-1). The reference
+  player stops sending `AssignWorkers`; only `scenario-mvp-absorb-first` moves (`,jobs=manual` on Tel Aviv).
+- The GDD v0.2 must-have map roster gains sourced records (`content/map/locations_1948.yaml`, all draft) for Negba,
+  Hulda, Nir Am, the Latrun and Iraq Suwaydan police forts, Bab al-Wad (Sha'ar HaGai), the Ad Halom bridge, Sha'ar
+  HaAliyah, and separate West and East Jerusalem / Old City markers. The loader validates their kinds, priorities,
+  explicit gameplay roles, sources, Hebrew names, land hexes and optional sourced control changes; the existing
+  `jerusalem` identity still owns the single Jerusalem city economy. East Jerusalem / the Old City is recorded as
+  Israeli-held from 15 May until its 28 May change to Arab forces. The map names each location in English and Hebrew,
+  and Jerusalem's pill reads "West Jerusalem" (#1008).
 - Kiryat Shmona (founded 18 July 1949) and Beit Shemesh (15 December 1950, the National Library's December 1950
   under the monthly turn) join the yishuv sites in `content/sites.yaml`, each with a field site in its hex; the
   founding days are the owner's (#785), and the rows stay draft. The reference player builds them in id order, so
@@ -19,6 +59,11 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 - Event options in the GDD loop can move a city's housing condition: `city_effects` takes `field: condition` with a
   change from -1 to 1, the condition stays from 0 to 1, and a sensitive event may only lower it (R-EFX-004, R-EFX-005;
   refs #806). No event uses them yet.
+- Settings: a language choice, English or עברית, under the quality choice (#1036). The Hebrew UI (#193) no longer needs
+  `?lang=he` in the address: a press puts every screen in the other language at once, with no reload, over the same
+  game and this turn's orders, and the choice is kept in `settings.txt` for the next visit. `?lang=` in the address
+  (or `-lang` on the desktop) still decides for that visit. A line under the choice says the event cards are still in
+  English only (#55).
 - Settings: a graphics quality choice, Automatic, High or Low (refs #40, second slice; owner decision of 18 Oct 2026).
   Automatic is what the game did before: the tier the device gets, and on the web the frame-time fallback steps down
   when frames are slow. High is the PC tier at render scale 1.0 and Low the Mobile tier at 0.8, both fixed, so the
@@ -49,8 +94,29 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
   kibbutzim and the moshav (a townsman, a smith and a nurse), and an arriving man and woman beside each transit camp from
   the day it is placed. They are scenery, never units; the static figures stream after the first frame and the animated
   ones only at close zoom (refs #666, #663).
+- City projects can need a local resource: a `projects.yaml` kind's `requires:` names one, a `cities.yaml` city lists
+  its `resources:` with sources, and `StartProject` refuses the kind in a city without it (R-PROJ-005, D-D8; refs #737).
+  The loader refuses a resource without sources and a kind whose resource no city has. The winery (vineyards, Zikhron
+  Ya'akov, flagged `to_verify` by the owner on 18 Oct 2026) is not in `content/` yet: its rows wait for a person to
+  check the vineyards' source, so the goldens do not move.
+- Delegation reads a minister's loyalty (R-EVT-003): when an unanswered event goes to a minister rated below
+  `delegation_loyalty_floor` (5), only `disloyal_effect_share` (0.5) of each numeric effect of the option lands. Both
+  are labelled design values in `rules.yaml` `mvp:`. No minister in `people.yaml` is rated below 5 today, so the
+  goldens do not move (refs #107).
 
 ### Changed
+- The Burma Road convoy truck and lorry stop on 7 December 1948, the approximate boundary when the Road of Valour
+  replaced the Burma Road for regular Jerusalem traffic; the Burma Road itself stays drawn (refs #1040, #1051).
+- MATKOT's whole-town models now stand on their towns far off, and the towns draw no procedural houses at any zoom
+  (refs #663, #917, #659; owner, 18 October 2026: "Whole model far, buildings near"). Each mapped town's model stands
+  on the town's core (where most of its building models stand, inside its kit footprint, clear of the next town and of
+  the sea, so Tel Aviv's no longer covers Jaffa and Haifa's stays out of the bay), as wide as that core, upright,
+  tilted to its ground (at most 10 degrees) and seated at its lowest point, so it never floats and a hillside no longer
+  cuts through it. Below about 40 km it gives way to
+  the single building models (#700), with the same hysteresis band. Mosques, churches, walls and ports keep the kit.
+  The 110 km view-distance switch and the "beside the town" spot are gone; a ma'abara or shikun still stands beside its
+  camp or housing project.
+- Money keeps both the calibrated per-head tax and city job income. Resolution step 7 now supports civilian-place upkeep (R-MONEY-002), with the owner-approved MVP rate of IL 0m a year for cities, permanent housing, industry, transit camps, military camps and Hakhsharot; military-unit upkeep remains Phase 5 (refs #884).
 - The population-tier badge on the twelve city and town pills keeps the values it shipped with, now owner-approved: tiers 1
   to 9 doubling from 1,000 people, at every zoom, at the start of the name and mirrored in Hebrew (owner, 18 October 2026,
   "Accept as shipped"). Rosh Pinna keeps tier 1 from its May 1948 figure of 350, which the data marks `wikipedia-only`
@@ -68,6 +134,15 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
   and stream after the first frame (#725).
 
 ### Fixed
+- MATKOT's townspeople (#666) and wildlife (#670) stand at the same 24x train scale as the building models
+  (`SettlementKits.ModelScale`, #1030): a man is about 43 m tall, an ibex about 31 m and a striped hyena about 26 m
+  long, all smaller than a house and about a fifth of the locomotive's car or less. Before, a man was about 2.5 km and
+  an animal about 1.9 km, sized like the unit pieces, which keep their symbolic size (#1033).
+- Official records for three sourcing calls (owner, 18 October 2026, #457): the Provisional Government keeps its
+  14 May 1948 start (the Knesset position records), Education is vacant from 19 May to 8 October 1951 (no official term
+  follows Remez's, row 3860), and `education_registration_1951` opens on 12 February 1951, its first cited plenum record
+  (was 29 November 1950). The card now fires on 15 February 1951, so `hash1952`, `mvp-end` and `scenario-mvp-defeat`
+  move (coalition stability only) and are re-pinned (`docs/determinism.md`).
 - MATKOT's building models up close (#700) stand at one world scale, set by the steam train the map runs: a typical
   8.5 m house is as long as the locomotive's car (about 204 m), so every model is 24x its building's real size
   (`SettlementKits.ModelScale`), keeps its own proportions and no longer fills the kit's plot; a plot holds a small
@@ -87,6 +162,13 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
   keep the floor too (26 px at 360x800, 30 px at 375x667): there the bar grows to its rows' height and the panels
   under it follow. On a phone held upright the decision card now starts right of the left rail and hangs under the bar instead of sitting centred, so no
   rail button sits under it (Why? and Settings did), and the rail's buttons are 60 px, at least 24 px on screen.
+- The web build no longer loses its boot or its 1948 Collection models to a rate-limited host (players got HTTP 429
+  from itch.io, #1054). The content texts are packed into one file at build time (`content/bundle.json`), so a boot
+  makes 9 StreamingAssets requests instead of 70 (main, measured headless); the content hash is unchanged. Every
+  StreamingAssets fetch at boot, the collection's checks file and bundles included (they had no retry), now goes
+  through one retry helper (`StreamingFetch`): 408, 429, 5xx and no response are retried after 0.5, 1 and 2 s, or a
+  longer `Retry-After` up to 10 s, four attempts in all, and then fail as before. Desktop and the editor still read
+  the files.
 
 ## [0.1.1] - 2026-10-18
 
