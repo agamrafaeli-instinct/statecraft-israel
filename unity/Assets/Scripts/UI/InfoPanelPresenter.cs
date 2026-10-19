@@ -1,5 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Statecraft.Game.Map;
 using Statecraft.Game.Map.Units;
@@ -19,6 +20,8 @@ namespace Statecraft.Game.UI
         public const string RowClass = "info-row";
         /// <summary>On the panel while it shows a unit's card: the rows keep their lines but drop the hex signs (Statecraft.uss).</summary>
         public const string UnitClass = "info-unit";
+        /// <summary>On the panel while it shows the GDD loop's city or site part (#381): a second column (Statecraft.uss).</summary>
+        public const string GddClass = "info-gdd-shown";
         readonly List<(VisualElement row, Label line)> rows = new List<(VisualElement, Label)>();
 
         readonly VisualElement panel; readonly SimBridge bridge; readonly UiText text;
@@ -28,6 +31,8 @@ namespace Statecraft.Game.UI
         readonly Label title, subtitle, region, settlements, localitiesLabel, placement, reason;
         readonly System.Func<int, int, IReadOnlyList<Statecraft.Game.Map.Kits.Localities.Place>>? localitiesAt;
         readonly UiIcon thumb;
+        /// <summary>The GDD loop's part (GddHexPanel, #381): a city's counts and orders, or the designated site's.</summary>
+        readonly VisualElement gdd;
         readonly IReadOnlyDictionary<string, string> settlementNames;
         readonly MapRegions? regions;
         readonly System.Func<string, (int q, int r)>? townHex;
@@ -43,9 +48,9 @@ namespace Statecraft.Game.UI
         /// agreement (null: no region line).</param>
         /// <param name="townHex">The hex each settlement's own point lies in, by id (<see cref="TownHex"/>; null: no note on
         /// a town drawn from the water hex next door, #204).</param>
-        /// <param name="townNamesHe">Each settlement's Hebrew name (name_he), by id: the Hebrew UI names the town in that
-        /// note with it, or with the English name where it has none (null: English names). The "Settlements" line keeps the
-        /// English names (#558).</param>
+        /// <param name="townNamesHe">Each settlement's Hebrew name (name_he), by id: the Hebrew UI names the town with it in the
+        /// title, the "Settlements" line and that note (#899), or with the English name where it has none (null: English
+        /// names).</param>
         public InfoPanelPresenter(VisualElement root, SimBridge bridge, UiText text, IReadOnlyDictionary<string, string> settlementNames,
             ScreenNav? nav = null, System.Func<PlacedToken?>? selectedUnit = null, MapRegions? regions = null,
             System.Func<int, int, IReadOnlyList<Statecraft.Game.Map.Kits.Localities.Place>>? localitiesAt = null,
@@ -58,6 +63,7 @@ namespace Statecraft.Game.UI
             localitiesLabel = panel.Q<Label>("info-localities");
             placement = panel.Q<Label>("info-placement"); reason = panel.Q<Label>("info-reason");
             thumb = panel.Q<UiIcon>("info-thumb");
+            gdd = panel.Q<VisualElement>(GddHexPanel.HostName);
             foreach (var row in panel.Query(className: RowClass).ToList()) rows.Add((row, row.Q<Label>()));
             campButton = panel.Q<Button>("build-camp"); housingButton = panel.Q<Button>("build-housing");
             onCamp = () => Build(MapActions.TransitCamp); onHousing = () => Build(MapActions.Housing);
@@ -170,13 +176,19 @@ namespace Statecraft.Game.UI
             side == Control1948.Side.Arab && holder != null && p.Fronts.Contains(holder);
 
         /// <summary>The "1948 localities" line for a hex: each place's 1948 name, with today's name where Localities.TodayName
-        /// allows ("Beisan (today: Beit She'an)"); empty for a hex with none.</summary>
+        /// allows ("Beisan (today: Beit She'an)"); empty for a hex with none. The Hebrew UI names a place by its name_he, by the
+        /// English name where it has none (#899), and drops a today name that is the same Hebrew word (Umm el Fahm and Umm al-Fahm
+        /// are both one name in Hebrew: 48 rows that would otherwise show a today name).</summary>
         public static string LocalitiesText(UiText text, IReadOnlyList<Statecraft.Game.Map.Kits.Localities.Place> places)
         {
             if (places.Count == 0) return "";
             bool hebrew = text["ui.lang"] == "he";
-            var names = places.Select(p => Statecraft.Game.Map.Kits.Localities.TodayName(p, hebrew) is string today
-                ? text.Format("info.locality_today", p.Settlement.Name, today) : p.Settlement.Name);
+            var names = places.Select(p =>
+            {
+                var name = hebrew && !string.IsNullOrWhiteSpace(p.NameHe) ? p.NameHe! : p.Settlement.Name;
+                return Statecraft.Game.Map.Kits.Localities.TodayName(p, hebrew) is string today && today != name
+                    ? text.Format("info.locality_today", name, today) : name;
+            });
             return text.Format("info.localities", string.Join(", ", names));
         }
 
@@ -189,6 +201,11 @@ namespace Statecraft.Game.UI
             return id => at[id];
         }
 
+        /// <summary>A settlement's name in the UI's language: its name_he under Hebrew, the English name where it has none.</summary>
+        string TownName(string id) =>
+            text["ui.lang"] == UiLanguage.Hebrew && townNamesHe != null && townNamesHe.TryGetValue(id, out var he)
+                && !string.IsNullOrWhiteSpace(he) ? he : settlementNames[id];
+
         void ShowLocalities(string line)
         {
             localitiesLabel.text = line;
@@ -198,6 +215,7 @@ namespace Statecraft.Game.UI
         public void Render()
         {
             RenderLines();
+            panel.EnableInClassList(GddClass, gdd.style.display.value == DisplayStyle.Flex);
             // A fact row shows only when its line has something to say (an empty row would leave a lone sign).
             foreach (var (row, line) in rows)
                 row.style.display = string.IsNullOrEmpty(line.text) ? DisplayStyle.None : DisplayStyle.Flex;
@@ -220,6 +238,7 @@ namespace Statecraft.Game.UI
                 placement.text = card.Footer; reason.text = card.Note;
                 camp.style.display = DisplayStyle.None; housing.style.display = DisplayStyle.None;
                 ShowThumb(null);
+                GddHexPanel.Hide(gdd);
                 return;
             }
             panel.EnableInClassList("info-empty", Selected == null);
@@ -230,13 +249,17 @@ namespace Statecraft.Game.UI
                 ShowLocalities("");
                 camp.style.display = DisplayStyle.None; housing.style.display = DisplayStyle.None;
                 ShowThumb(null);
+                GddHexPanel.Hide(gdd);
                 return;
             }
             var (q, r) = Selected.Value;
             var hex = c.HexAt(q, r);
             ShowThumb(hex?.Biome);
-            var owned = c.SettlementHexes.Where(x => x.Q == q && x.R == r).Select(x => settlementNames[x.Id]).ToList();   // strict: every settlement hex has a name (final review M4)
+            var owned = c.SettlementHexes.Where(x => x.Q == q && x.R == r).Select(x => TownName(x.Id)).ToList();   // strict: every settlement hex has a name (final review M4)
             title.text = owned.Count > 0 ? owned[0] : hex == null ? text["info.off_map"] : text["info.biome." + hex.Biome];
+            // The GDD loop's city or designated site (#381); a site's hex has no settlement, so its name is the title.
+            var siteName = GddHexPanel.Render(gdd, bridge, text, q, r);
+            if (siteName != null && owned.Count == 0) title.text = siteName;
             subtitle.text = hex == null ? "" : text.Format("info.hex", text["info.biome." + hex.Biome], hex.ElevM);   // no debug coordinates in player text (playtest 2, P2-6)
             // The armistice zone in force, else the sub-district on 15 May 1948, and any armistice line in force through the
             // hex, each with its agreement (true lines drawn to the nearest hex edge: the owner's ruling).
@@ -246,20 +269,19 @@ namespace Statecraft.Game.UI
             // so, so this hex's elevation does not read as the town's (#204).
             if (townHex != null)
                 foreach (var town in c.SettlementHexes.Where(x => x.Q == q && x.R == r && townHex(x.Id) != (q, r)))
-                {
-                    // The Hebrew UI names the town in Hebrew (name_he), and in English where it has no Hebrew name.
-                    var name = text["ui.lang"] == UiLanguage.Hebrew && townNamesHe != null && townNamesHe.TryGetValue(town.Id, out var he)
-                        && !string.IsNullOrWhiteSpace(he) ? he : settlementNames[town.Id];
-                    settlements.text += "\n" + text.Format("info.town_in_water", name);
-                }
+                    settlements.text += "\n" + text.Format("info.town_in_water", TownName(town.Id));
             ShowLocalities(localitiesAt == null ? "" : LocalitiesText(text, localitiesAt(q, r)));
             var here = MapActions.At(s, q, r);
             var queued = bridge.QueuedLike(new MapAction(MapActions.Housing, q, r)) as MapAction;
-            placement.text = queued != null ? text.Format("info.queued", PlayerText.Capitalised(PlayerText.MapAction(c, queued.Action)))
-                : here != null ? text.Format("info.built", PlayerText.Capitalised(PlayerText.MapAction(c, here.Action)),
+            // The action's name from the UI strings (#929): PlayerText.MapAction is the content's English name (#924's tools
+            // test keeps the English string equal to it).
+            placement.text = queued != null ? text.Format("info.queued", PlayerText.Capitalised(text["info.map_action." + queued.Action]))
+                : here != null ? text.Format("info.built", PlayerText.Capitalised(text["info.map_action." + here.Action]),
                     Control1948.LineDateText(here.Date.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture), k => text[k])) : "";   // PlayerText.Month is always English (#701)
-            var campWhy = MapActions.Check(c, s, MapActions.TransitCamp, q, r);
-            var housingWhy = MapActions.Check(c, s, MapActions.Housing, q, r);
+            var campReason = MapActions.CheckReason(c, s, MapActions.TransitCamp, q, r);
+            var housingReason = MapActions.CheckReason(c, s, MapActions.Housing, q, r);
+            var campWhy = campReason == null ? null : MapActionReasonText(campReason, text);
+            var housingWhy = housingReason == null ? null : MapActionReasonText(housingReason, text);
             // eras.yaml systems.map_actions (#58): an action the era does not allow has no button and no reason
             var allowed = c.SystemsAt(s.Date).MapActions;
             bool campOn = allowed.Contains(MapActions.TransitCamp), housingOn = allowed.Contains(MapActions.Housing);
@@ -275,6 +297,25 @@ namespace Statecraft.Game.UI
             camp.text = c.RulesAt(s.Date).MapActions.TryGetValue(MapActions.TransitCamp, out var cr) ? text.Format("info.build_camp", PlayerText.Money(c, "treasury", cr.Cost)) : text["info.build_camp_plain"];
             housing.text = c.RulesAt(s.Date).MapActions.TryGetValue(MapActions.Housing, out var hr) ? text.Format("info.build_housing", PlayerText.Money(c, "treasury", hr.Cost)) : text["info.build_housing_plain"];
             reason.text = string.Join("\n", new[] { campWhy, housingWhy }.Where(x => x != null).Distinct());   // the sim's reasons, each once
+        }
+
+        static string MapActionReasonText(MapActionReason reason, UiText text)
+        {
+            string Action(string id) => text["info.map_action." + id];
+            string Date(string iso) => Control1948.DateText(System.DateTime.ParseExact(iso, "yyyy-MM-dd", CultureInfo.InvariantCulture), k => text[k]);
+            var key = "info.map_action_reason." + reason.Kind;
+            switch (reason.Kind)
+            {
+                case "action_from": case "action_until": return text.Format(key, PlayerText.Capitalised(Action(reason.Values[0])), Date(reason.Values[1]));
+                case "all_from": return text.Format(key, Date(reason.Values[0]));
+                case "too_far": {
+                    var distance = int.Parse(reason.Values[0], CultureInfo.InvariantCulture);
+                    return text.Format(key + (distance == 1 ? "_one" : "_many"), distance);
+                }
+                case "turn_cap": return text.Format(key, int.Parse(reason.Values[0], CultureInfo.InvariantCulture));
+                case "occupied": return text.Format(key, Action(reason.Values[0]));
+                default: return text[key];
+            }
         }
     }
 }

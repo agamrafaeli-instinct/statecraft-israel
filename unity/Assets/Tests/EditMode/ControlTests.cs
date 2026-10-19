@@ -102,6 +102,43 @@ public class ControlTests
         Assert.AreEqual(Control1948.Side.Israel, m.Control.At(nazareth.q, nazareth.r, Truce2).side);
     }
 
+    /// <summary>#1009 step 1: the map applies content/map/overrides.yaml last. A control override changes one period of one
+    /// hex ("One period at a time", owner, 18 October 2026), a terrain override the hex's biome, and a location override
+    /// moves the settlement's marker to the new hex's centre.</summary>
+    [Test]
+    public void TheMapAppliesTheOverrideFileLast()
+    {
+        var nazareth = HexOf(35.3033, 32.7019);
+        var inputs = GameInputs.MapFromDisk(Paths.Content, Paths.StreamingMap);
+        var target = JsonUtility.FromJson<HexFile>(inputs.HexesJson).hexes.Single(h => h.q == 7 && h.r == 7);
+        Assert.IsTrue(target.land);
+        var biome = target.biome == "desert" ? "hills" : "desert";
+        inputs.OverridesYaml = $"terrain:\n  - {{ hex: {{ q: 7, r: 7 }}, value: {biome} }}\n"
+            + $"control:\n  - {{ hex: {{ q: {nazareth.q}, r: {nazareth.r} }}, period: truce1, value: I }}\n"
+            + "locations:\n  - { id: acre, hex: { q: 7, r: 7 } }\n";
+        EditorSceneManager.OpenScene("Assets/Map.unity", OpenSceneMode.Single);
+        var map = Object.FindFirstObjectByType<MapScene>();
+        map.Build(inputs);
+        Assert.AreEqual(Control1948.Side.Israel, map.Control!.At(nazareth.q, nazareth.r, Truce1).side, "the overridden period");
+        Assert.AreEqual(Control1948.Side.Arab, map.Control.At(nazareth.q, nazareth.r, Start).side, "the period before, as the history has it");
+        Assert.AreEqual(Control1948.Side.Contested, map.Control.At(nazareth.q, nazareth.r, TenDays).side, "the period after, as the history has it");
+        Assert.AreEqual(biome, map.Hexes.hexes.Single(h => h.q == 7 && h.r == 7).biome);
+        var acre = map.Settlements.Single(x => x.Id == "acre");
+        Assert.AreEqual((target.lon, target.lat), (acre.Lon, acre.Lat), "the marker stands on the new hex");
+        Assert.AreEqual((target.lon, target.lat), map.LocationPoint("acre", 0, 0));
+        Assert.AreEqual((1.0, 2.0), map.LocationPoint("haifa", 1, 2), "a location the file does not move keeps its point");
+    }
+
+    [Test]
+    public void AControlOverrideOfAPeriodTheFileDoesNotHaveFailsNamingTheOverrideField()
+    {
+        var c = Control1948.Parse(ControlText);
+        var o = MapOverrides.Parse("terrain: []\ncontrol:\n  - { hex: { q: 7, r: 6 }, period: later, value: I }\nlocations: []\n");
+        var e = Assert.Throws<ContentException>(() => c.ApplyOverrides(o));
+        Assert.AreEqual(MapOverrides.FileName, e!.File);
+        Assert.AreEqual("control[0].period", e.Field);
+    }
+
     // Settlement hexes (content/map/settlement_hexes.yaml, tools/settlement_hexes.py)
     static readonly (int q, int r) AcreHex = (7, 6), JerusalemHex = (0, 23), GazaHex = (-11, 27), YadMordechaiHex = (-9, 26);
 
@@ -283,8 +320,8 @@ public class ControlTests
     }
 
     /// <summary>The longest legend label (English and Hebrew, a period with some fronts switched: legend and caption) fits
-    /// beside the minimap with the real HUD and the longest event card (which, being modal, may cover it: owner, 15 October
-    /// 2026), as ArmisticeTests.TheLongestMapLabelFitsBesideTheEventCard
+    /// beside the minimap with the real HUD and the longest event card (which hides it while open: owner, 17 October 2026,
+    /// #849), as ArmisticeTests.TheLongestMapLabelFitsBesideTheEventCard
     /// checks the older label: on screen, clear of the card, the minimap, the info panel and the top bar, its text not cut, at
     /// most six lines (the approved legend is about three of them in the narrow box).</summary>
     [UnityTest]
@@ -324,13 +361,9 @@ public class ControlTests
                     Assert.IsTrue(lb.xMin >= screen.xMin - 0.5f && lb.xMax <= screen.xMax + 0.5f && lb.yMin >= screen.yMin - 0.5f && lb.yMax <= screen.yMax + 0.5f,
                         $"{at}: the label {lb} leaves the screen {screen}");
                     Assert.IsFalse(lb.Overlaps(R("minimap")), $"{at}: the label {lb} overlaps the minimap {R("minimap")}");
-                    // Owner, 15 October 2026, on the longest card (bernadotte_assassination since the GDD cutover) covering the
-                    // legend at 390x844: "Accept it, the card is modal". A modal card (its backdrop dims the map and disables
-                    // the minimap column, ScreenNav.DisableCovered) may cover the legend at any size; a card that covers it must
-                    // be modal. Today every shown card is modal, so this fails only if a shown card stops being modal.
-                    if (lb.Overlaps(R("event-card")))
-                        Assert.IsTrue(root.Q("root").ClassListContains(EventCardPresenter.ModalClass),
-                            $"{at}: the event card {R("event-card")} covers the label {lb} and is not modal");
+                    // Not clear of the card: the owner's decision of 17 October 2026 (#849, issuecomment-6233870812, "Hide
+                    // legend under card", on desktop and phone alike) hides the legend while the modal card is open
+                    // (DecisionCardTests.TheLegendIsHiddenWhileTheCardIsOpen), so the card never covers it.
                     if (root.Q("info-panel").resolvedStyle.display == DisplayStyle.Flex)
                         Assert.IsFalse(lb.Overlaps(R("info-panel")), $"{at}: the info panel overlaps the label {lb}");
                     Assert.IsFalse(lb.Overlaps(R("top-bar")), $"{at}: the top bar overlaps the label");

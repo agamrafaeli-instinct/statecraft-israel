@@ -59,13 +59,30 @@ namespace Statecraft.Game.UI
             CancelTraining x => FormattableString.Invariant($"untrain:{x.Cohort}"),
             PioneerWork w => FormattableString.Invariant($"unit:{w.Unit}"),
             StopWork w => FormattableString.Invariant($"unit:{w.Unit}"),
+            StartProject p => FormattableString.Invariant($"project:{p.Q},{p.R}"),
+            CancelProject x => FormattableString.Invariant($"unproject:{x.Project}"),
             _ => c.Kind,
         };
 
-        double Price(Command c) => AttentionSystem.IsCommandKind(c.Kind) ? AttentionSystem.Cost(Content, State, c.Kind) : 0;
+        /// <summary>The order's Attention price at this turn's prices: what <see cref="Queue"/> charges and the card shows.</summary>
+        public double Price(Command c) => AttentionSystem.Price(Content, State, c);
+
+        /// <summary>Whether the Attention left pays for the order (a queued order with its key is refunded first): the one
+        /// check <see cref="Queue"/> refuses on, so the event card (#1034) and a refusal can never disagree.</summary>
+        public bool CanPay(Command c) => Price(c) <= LeftFor(c) + 1e-9;
+
+        double LeftFor(Command c) { var old = QueuedLike(c); return AttentionLeft + (old != null ? Price(old) : 0); }
+
+        /// <summary>Who End Turn hands the event to with the orders queued now (Simulation.DelegatedTo), or null for the
+        /// cabinet: an appointment queued this turn is in office by then (#1034).</summary>
+        public Person? DelegatedTo(GameEvent e) => Simulation.DelegatedTo(Content, State, queue, e.Id);
+
+        /// <summary>The vacant seats the player can fill, less those an appointment queued now fills (Cabinet.Vacancies): the
+        /// side menu's Cabinet badge (#1109).</summary>
+        public IReadOnlyList<Office> Vacancies => Cabinet.Vacancies(Content, State, queue);
 
         /// <summary>Attention left after paying for the queued orders at this turn's prices.</summary>
-        public double AttentionLeft => State.Attention - queue.Sum(Price);
+        public double AttentionLeft => AttentionSystem.Left(Content, State, queue);
 
         /// <summary>The queued order with this key, or null.</summary>
         public Command? QueuedLike(Command c) => queue.FirstOrDefault(q => Key(q) == Key(c));
@@ -110,11 +127,34 @@ namespace Statecraft.Game.UI
                     return Unknown("unit", w.Unit.ToString(System.Globalization.CultureInfo.InvariantCulture), State.Units.Keys.Select(k => k.ToString(System.Globalization.CultureInfo.InvariantCulture)))
                         ?? Unknown("pioneer_work", w.Action, new[] { Projects.BuildYishuv }) ?? Unknown("site", w.Site, Content.Sites.Select(x => x.Id));
                 case StopWork w: return Unknown("unit", w.Unit.ToString(System.Globalization.CultureInfo.InvariantCulture), State.Units.Keys.Select(k => k.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                // City projects (#735): ids only; the sim refuses a far or taken hex, the policy gate and the turn's limit itself.
+                case StartProject p:
+                    return Unknown("city_project", p.ProjectKind, Content.ProjectKinds.Select(x => x.Id)) ?? Unknown("city", p.City, Content.Cities.Select(x => x.Id));
+                case CancelProject x:
+                    return Unknown("city_project", x.Project.ToString(System.Globalization.CultureInfo.InvariantCulture), State.CityProjects.Keys.Select(k => k.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                // Buying Arms (#781): no ids; the sim refuses a count below one itself.
+                case BuyArms _: return null;
                 default: return text["order.invalid"];
             }
         }
 
         string? Refuse(string reason) { Refused?.Invoke(reason); return reason; }
+
+        static void Notify(Action? handlers)
+        {
+            if (handlers == null) return;
+            foreach (Action handler in handlers.GetInvocationList())
+                try { handler(); }
+                catch (Exception e) { UnityEngine.Debug.LogException(e); }
+        }
+
+        static void Notify<T>(Action<T>? handlers, T value)
+        {
+            if (handlers == null) return;
+            foreach (Action<T> handler in handlers.GetInvocationList())
+                try { handler(value); }
+                catch (Exception e) { UnityEngine.Debug.LogException(e); }
+        }
 
         /// <summary>Queues an order (replacing one with the same key). Returns null, or why it was refused here: an id
         /// the content does not have, the game is over, or the order costs more attention than is left. A refusal is
@@ -126,10 +166,9 @@ namespace Statecraft.Game.UI
             if (bad != null) return Refuse(bad);
             if (State.GameOver != null) return Refuse(text["order.game_over"]);
             if (c is AllocateBudget ab) c = new AllocateBudget(new Dictionary<string, double>(ab.Shares));   // a snapshot: later edits to the caller's dictionary must not change the order
+            if (!CanPay(c))
+                return Refuse(text.Format("order.no_attention", Price(c), LeftFor(c)));
             var old = QueuedLike(c);
-            var left = AttentionLeft + (old != null ? Price(old) : 0);
-            if (Price(c) > left + 1e-9)
-                return Refuse(text.Format("order.no_attention", Price(c), left));
             if (old != null) queue[queue.IndexOf(old)] = c; else queue.Add(c);
             Changed?.Invoke();
             return null;
@@ -158,14 +197,14 @@ namespace Statecraft.Game.UI
                 LastBatch = Array.Empty<Command>();
                 var reason = text["order.failed"];   // the message stays in the log above, not on screen (#622)
                 var failed = new StepResult(State, new Cause[0], batch.Select(x => new Rejection(x, reason)).ToList());
-                Changed?.Invoke();
-                TurnEnded?.Invoke(failed.Rejected);
+                Notify(Changed);
+                Notify(TurnEnded, failed.Rejected);
                 return failed;
             }
             LastBatch = batch; LastBatchDate = date;
             queue.Clear();
-            Changed?.Invoke();
-            TurnEnded?.Invoke(r.Rejected);
+            Notify(Changed);
+            Notify(TurnEnded, r.Rejected);
             return r;
         }
 

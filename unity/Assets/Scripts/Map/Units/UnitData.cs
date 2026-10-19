@@ -75,6 +75,16 @@ namespace Statecraft.Game.Map.Units
         public List<UnitSource> Sources { get; set; } = new List<UnitSource>();
     }
 
+    /// <summary>Equipment a source puts with an army unit from a day (issue #665): <see cref="UnitData.Gun65mm"/> or
+    /// <see cref="UnitData.Jeep"/>, drawn on its token beside the figures from <see cref="From"/> for the rest of its windows.</summary>
+    public sealed class UnitVehicle
+    {
+        public string Type { get; set; } = "";
+        public string From { get; set; } = "";
+        public string Note { get; set; } = "";
+        public List<UnitSource> Sources { get; set; } = new List<UnitSource>();
+    }
+
     /// <summary>A unit's sourced disbandment: no window may run past it.</summary>
     public sealed class UnitDisbanded
     {
@@ -88,6 +98,13 @@ namespace Statecraft.Game.Map.Units
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
+        /// <summary>The sourced Hebrew name; empty when no accepted source gives one.</summary>
+        public string NameHe { get; set; } = "";
+        public List<UnitSource> NameHeSources { get; set; } = new List<UnitSource>();
+        /// <summary>"agent-checked" until a native Hebrew speaker reviews the name (#564).</summary>
+        public string? NameHeReview { get => nameHeReview; set { nameHeReview = value; NameHeReviewGiven = true; } }
+        [YamlIgnore] public bool NameHeReviewGiven { get; private set; }
+        string? nameHeReview;
         public string Number { get; set; } = "";
         public string Service { get; set; } = "";
         /// <summary>Whose formation it is (<see cref="UnitData.Sides"/>): the token flies that side's flag where one is
@@ -116,13 +133,24 @@ namespace Statecraft.Game.Map.Units
         /// <summary>The riflemen's headgear (<see cref="UnitData.Headgears"/>), only where a source ties it to the unit.</summary>
         public List<string>? Headgear { get; set; }
         public List<UnitSource>? HeadgearSources { get; set; }
+        /// <summary>The sourced equipment drawn on the token (<see cref="UnitVehicle"/>), or null.</summary>
+        public List<UnitVehicle>? Vehicles { get; set; }
         public UnitDisbanded? Disbanded { get; set; }
         public List<UnitAnchor> Anchors { get; set; } = new List<UnitAnchor>();
         public List<UnitAircraft>? Aircraft { get; set; }
         public List<UnitSource>? Sources { get; set; }
 
-        /// <summary>Every source of the row: its own, its anchors' and its aircraft's.</summary>
+        /// <summary>Every source of the row: its Hebrew name's and its facts' (<see cref="FactSources"/>).</summary>
         public IEnumerable<UnitSource> AllSources()
+        {
+            foreach (var s in NameHeSources) yield return s;
+            foreach (var s in FactSources()) yield return s;
+        }
+
+        /// <summary>The sources of the row's facts: its own, its anchors', its aircraft's, its headgear's, its vehicles',
+        /// its disbandment's and its strength's. A Hebrew name's source is not one: it does not check a fact, so it never clears
+        /// wikipedia_only (#902).</summary>
+        public IEnumerable<UnitSource> FactSources()
         {
             if (Sources != null) foreach (var s in Sources) yield return s;
             foreach (var a in Anchors)
@@ -132,6 +160,7 @@ namespace Statecraft.Game.Map.Units
             }
             if (Aircraft != null) foreach (var t in Aircraft) foreach (var s in t.Sources) yield return s;
             if (HeadgearSources != null) foreach (var s in HeadgearSources) yield return s;
+            if (Vehicles != null) foreach (var v in Vehicles) foreach (var s in v.Sources) yield return s;
             if (Disbanded != null) foreach (var s in Disbanded.Sources) yield return s;
             if (Strength != null) foreach (var s in Strength.Sources) yield return s;
         }
@@ -147,8 +176,8 @@ namespace Statecraft.Game.Map.Units
         public const string Army = "army", Air = "air", Navy = "navy";
         /// <summary>The sides of 1948 a unit can belong to (Q-START-4, owner, 15 October 2026: "Armies + ALA + local
         /// forces"): Israel, the Arab states whose armies entered the war (the fronts of <see cref="FrontArmistice"/>, and
-        /// Iraq), the Arab Liberation Army and the local Arab forces, each under its own name. The map draws only Israel's
-        /// rows (<see cref="UnitRoster.OnMap"/>; owner, 17 October 2026, #740).</summary>
+        /// Iraq), the Arab Liberation Army and the local Arab forces, each under its own name. The map draws Israel's rows
+        /// and those of a side with a Collection figure (<see cref="UnitRoster.OnMap"/>; owner, 17 October 2026, #740; #665).</summary>
         public const string Israel = "israel";
         public static readonly IReadOnlyList<string> Sides = new[] { Israel, "egypt", "jordan", "syria", "iraq", "lebanon", "ala", "local_arab_forces" };
         /// <summary>The levels a row's formation can be: a state's whole force in the field, or one formation of it.</summary>
@@ -157,6 +186,10 @@ namespace Statecraft.Game.Map.Units
         public const string EndBySource = "source", EndByFrontArmistice = "front_armistice";
         public const string SlouchHat = "slouch_hat", SteelHelmet = "steel_helmet", WoolCap = "wool_cap";
         public static readonly IReadOnlyList<string> Headgears = new[] { SlouchHat, SteelHelmet, WoolCap };
+        /// <summary>The equipment a row can put on its token (<see cref="UnitVehicle"/>): the 65 mm mountain gun (the
+        /// "Napoleonchik") and the jeep.</summary>
+        public const string Gun65mm = "gun_65mm", Jeep = "jeep";
+        public static readonly IReadOnlyList<string> VehicleTypes = new[] { Gun65mm, Jeep };
         /// <summary>The uniform default where no source ties headgear to a unit: the 1948 photographs' bush hat and Mk II
         /// steel helmet (docs/units.md, "Sources").</summary>
         public static readonly IReadOnlyList<string> DefaultHeadgear = new[] { SlouchHat, SteelHelmet, SlouchHat };
@@ -215,6 +248,7 @@ namespace Statecraft.Game.Map.Units
                 if (!Services.Contains(u.Service)) throw new InvalidDataException($"{at} has unknown service '{u.Service}' (army, air or navy)");
                 if (!((IList<string>)Sides).Contains(u.Side)) throw new InvalidDataException($"{at} has unknown side '{u.Side}' ({string.Join(", ", Sides)})");
                 if (string.IsNullOrWhiteSpace(u.Name) || string.IsNullOrWhiteSpace(u.Sector)) throw new InvalidDataException($"{at} needs a name and a sector");
+                ValidateHebrewName(u, at);
                 if (u.Echelon != null && !((IList<string>)Echelons).Contains(u.Echelon)) throw new InvalidDataException($"{at} has unknown echelon '{u.Echelon}' ({string.Join(", ", Echelons)})");
                 if (u.Side != Israel && (u.Echelon == null || u.Strength == null)) throw new InvalidDataException($"{at} is a row of {u.Side}, so it needs an echelon and a strength (#570)");
                 if (u.Strength != null)
@@ -279,6 +313,19 @@ namespace Statecraft.Game.Map.Units
                         throw new InvalidDataException($"{at} headgear must be three of {string.Join(", ", Headgears)}, on an army unit");
                     if (u.HeadgearSources == null || u.HeadgearSources.Count == 0) throw new InvalidDataException($"{at} headgear has no source");
                 }
+                if (u.Vehicles != null)
+                {
+                    var types = new HashSet<string>();
+                    foreach (var v in u.Vehicles)
+                    {
+                        if (v == null || u.Service != Army || !((IList<string>)VehicleTypes).Contains(v.Type) || !types.Add(v.Type))
+                            throw new InvalidDataException($"{at} vehicles must be one each of {string.Join(", ", VehicleTypes)}, on an army unit");
+                        try { Day(v.From); }
+                        catch (FormatException e) { throw new InvalidDataException($"{at} vehicle '{v.Type}' from: {e.Message}", e); }
+                        v.Sources ??= new List<UnitSource>();
+                        if (string.IsNullOrWhiteSpace(v.Note) || v.Sources.Count == 0) throw new InvalidDataException($"{at} vehicle '{v.Type}' needs a note and a source");
+                    }
+                }
                 foreach (var s in u.AllSources())
                 {
                     if (s == null || string.IsNullOrWhiteSpace(s.Url) || !s.Url.StartsWith("https://", StringComparison.Ordinal))
@@ -288,6 +335,21 @@ namespace Statecraft.Game.Map.Units
                 }
             }
             return doc.Units;
+        }
+
+        static void ValidateHebrewName(UnitEntry u, string at)
+        {
+            bool named = !string.IsNullOrWhiteSpace(u.NameHe);
+            if (u.NameHeReviewGiven && u.NameHeReview != "agent-checked")
+                throw new InvalidDataException($"{at} name_he_review must be agent-checked, or left out once reviewed");
+            if (!named)
+            {
+                if (u.NameHeSources.Count > 0) throw new InvalidDataException($"{at} name_he_sources is set without name_he");
+                if (u.NameHeReviewGiven) throw new InvalidDataException($"{at} name_he_review is set without name_he");
+                return;
+            }
+            if (!Regex.IsMatch(u.NameHe, "[א-ת]")) throw new InvalidDataException($"{at} name_he must contain Hebrew letters");
+            if (u.NameHeSources.Count == 0) throw new InvalidDataException($"{at} name_he_sources is empty");
         }
 
         static void Window(string where, string? from, string? to, bool toRequired)
@@ -301,8 +363,9 @@ namespace Statecraft.Game.Map.Units
             catch (FormatException e) { throw new InvalidDataException($"{where} from/to: {e.Message}", e); }
         }
 
-        /// <summary>True when every source of the row is a Wikipedia article or a Wikidata item (the file's wikipedia_only).</summary>
-        public static bool IsWikipediaOnly(UnitEntry u) => IsWikipediaOnly(u.AllSources());
+        /// <summary>True when every source of the row's facts is a Wikipedia article or a Wikidata item (the file's
+        /// wikipedia_only); the Hebrew name's sources do not count.</summary>
+        public static bool IsWikipediaOnly(UnitEntry u) => IsWikipediaOnly(u.FactSources());
 
         /// <summary>True when every one of <paramref name="sources"/> is a Wikipedia article or a Wikidata item (the card's
         /// draft note, per anchor).</summary>

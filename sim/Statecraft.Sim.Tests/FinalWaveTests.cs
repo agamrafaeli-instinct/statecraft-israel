@@ -36,6 +36,15 @@ public class FinalWaveTests
         Assert.Contains(o.Effects, f => f.Target == cost && f.Delta < 0);
     }
 
+    /// <summary>Owner decision of 17 October 2026 (#938), "A cost for refusing too": neither answer to the reparations claim is
+    /// free, so the game does not nudge the player toward the one that did not happen. Each option costs a resource.</summary>
+    [Fact]
+    public void NeitherAnswerToTheReparationsClaimIsFree()
+    {
+        foreach (var o in Real.Events.Single(e => e.Id == "reparations_claim").Options)
+            Assert.True(o.Effects.Any(f => Resources.Contains(f.Target) && f.Delta < 0), $"reparations_claim.{o.Id} costs nothing");
+    }
+
     [Fact]
     public void TheSensitiveEventsArePinned()
     {
@@ -65,6 +74,18 @@ public class FinalWaveTests
             ["b.yaml"] = "id: b\ntitle: B\ntext: x\nfrom: 1948-06-01\ntags: [holocaust]\noptions:\n  - id: o\n    text: O\nstatus: fact-checked\n",
         });
         Assert.Equal(new[] { "b" }, ReleaseGate.SensitiveUnreviewed(ContentLoader.Load(reviewed)));
+    }
+
+    /// <summary>R-ALT-011: a consequence card or a variant needs a person's sign-off before a shareable build.</summary>
+    [Fact]
+    public void AShareableBuildNeedsEveryAlternateCardSignedOff()
+    {
+        Assert.Empty(ReleaseGate.AlternateUnsigned(Real));
+        var c = AlternateTimelineTests.Load(("parent.yaml", AlternateTimelineTests.Parent), ("after_road.yaml", AlternateTimelineTests.Consequence), ("outside.yaml", AlternateTimelineTests.Outside));
+        Assert.Equal(new[] { "after_road", "outside" }, ReleaseGate.AlternateUnsigned(c));
+        var signed = AlternateTimelineTests.Consequence + "status: fact-checked\nreviewed_by: a-reviewer\nreviewed_on: 2026-10-20\n";
+        var c2 = AlternateTimelineTests.Load(("parent.yaml", AlternateTimelineTests.Parent), ("after_road.yaml", signed));
+        Assert.Empty(ReleaseGate.AlternateUnsigned(c2));
     }
 
     // ---- M2: Cause text is derived output, deterministic ----

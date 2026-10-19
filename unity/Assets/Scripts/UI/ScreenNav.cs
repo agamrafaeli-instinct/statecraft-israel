@@ -4,13 +4,13 @@ using UnityEngine.UIElements;
 
 namespace Statecraft.Game.UI
 {
-    /// <summary>The top-bar buttons open the Cabinet, Budget, Defence, Why and Settings screens, one at a time; pressing the open
+    /// <summary>The side-menu buttons open the Cabinet, Budget, Defence, Why, How to play and Settings screens, one at a time; pressing the open
     /// screen's button again closes it. Every press toggles, synchronously, with no debounce: two presses in one frame (a
     /// double click, or a click plus Enter) open and close again, so the result depends only on the number of presses
     /// (HudTests.TwoPressesInOneFrameToggleTwice; playtest 1, item 11).</summary>
     public sealed class ScreenNav : System.IDisposable
     {
-        public static readonly string[] Screens = { "cabinet", "budget", "defence", "why", "settings" };
+        public static readonly string[] Screens = { "cabinet", "budget", "defence", "why", "how-to-play", "settings" };
         /// <summary>The class on the open screen's button (Statecraft.uss lights its ring).</summary>
         public const string OpenClass = "nav-open";
         /// <summary>The class on the "root" element while a wide screen (class <see cref="WideClass"/>: Cabinet, Defence) is
@@ -28,9 +28,11 @@ namespace Statecraft.Game.UI
         /// column and the info panel; a wide screen covers the info panel; the open decision card's backdrop
         /// (EventCardPresenter.OpenClass, with no start screen or screen over it: ModalClass, set here) covers the minimap
         /// column and the info panel; an End Turn outcome clip (OutcomePresenter.OpenClass) covers the top bar, the minimap
-        /// column, the info panel and the decision layer. Called wherever one of those classes changes (StartScreenPresenter,
-        /// Open, HudPresenter's tier, EventCardPresenter, OutcomePresenter), so no caller re-enables a panel another still
-        /// covers.</summary>
+        /// column, the info panel and the decision layer. The turn report (TurnReportPresenter.OpenClass, #1037) covers them
+        /// too, and is itself enabled only while it shows and no start screen or outcome clip covers it; when it comes out it
+        /// takes the focus (OnUncovered on its element). Called wherever one of those classes changes (StartScreenPresenter,
+        /// Open, HudPresenter's tier, EventCardPresenter, OutcomePresenter, TurnReportPresenter), so no caller re-enables a
+        /// panel another still covers.</summary>
         public static void DisableCovered(VisualElement root)
         {
             var r = root.Q("root") ?? root;
@@ -38,18 +40,26 @@ namespace Statecraft.Game.UI
             bool screen = r.ClassListContains(ScreenOpenClass);
             bool full = screen && r.ClassListContains(HudPresenter.TwoRowClass);
             bool outcome = r.ClassListContains(OutcomePresenter.OpenClass);   // an End Turn outcome clip covers all but itself
+            bool report = r.ClassListContains(TurnReportPresenter.OpenClass);   // the turn report covers the HUD under it
             bool modal = r.ClassListContains(EventCardPresenter.OpenClass) && !start && !screen && !outcome;
             r.EnableInClassList(EventCardPresenter.ModalClass, modal);
-            r.Q("top-bar")?.SetEnabled(!(start || outcome));
-            r.Q("left-column")?.SetEnabled(!(start || outcome));   // the screens' buttons: usable wherever the top bar is
-            r.Q("right-column")?.SetEnabled(!(start || full || modal || outcome));
-            r.Q("info-panel")?.SetEnabled(!(start || full || modal || outcome || r.ClassListContains(WideOpenClass)));
+            r.Q("top-bar")?.SetEnabled(!(start || outcome || report));
+            r.Q("left-column")?.SetEnabled(!(start || outcome || report));   // the screens' buttons: usable wherever the top bar is
+            r.Q("right-column")?.SetEnabled(!(start || full || modal || outcome || report));
+            r.Q("info-panel")?.SetEnabled(!(start || full || modal || outcome || report || r.ClassListContains(WideOpenClass)));
             var layer = r.Q("event-layer");
             if (layer != null)
             {
-                bool was = layer.enabledSelf, now = !(start || screen || outcome);
+                bool was = layer.enabledSelf, now = !(start || screen || outcome || report);
                 layer.SetEnabled(now);
                 if (!was && now) (layer.userData as System.Action)?.Invoke();   // EventCardPresenter: the open card takes the focus
+            }
+            var panel = r.Q(TurnReportPresenter.ElementName);
+            if (panel != null)
+            {
+                bool was = panel.enabledSelf, now = report && !(start || outcome);
+                panel.SetEnabled(now);
+                if (!was && now) (panel.userData as System.Action)?.Invoke();   // TurnReportPresenter: Close takes the focus
             }
         }
 
@@ -66,7 +76,9 @@ namespace Statecraft.Game.UI
             screen.style.display.keyword == StyleKeyword.Undefined && screen.style.display.value == DisplayStyle.Flex;
         readonly VisualElement root;
         readonly List<(Button, System.Action)> hooks = new List<(Button, System.Action)>();
+        readonly List<Button> closes = new List<Button>();
         readonly EventCallback<NavigationCancelEvent> onCancel;
+        readonly EventCallback<GeometryChangedEvent> onGeometry;
 
         public ScreenNav(VisualElement root)
         {
@@ -76,6 +88,8 @@ namespace Statecraft.Game.UI
             // no element has the focus (CloseOnEscape).
             onCancel = e => { if (Close()) e.StopPropagation(); };
             root.RegisterCallback(onCancel, TrickleDown.TrickleDown);
+            onGeometry = e => FitCloseButtons();
+            root.RegisterCallback(onGeometry);
             foreach (var s in Screens)
             {
                 var screen = s;
@@ -83,15 +97,67 @@ namespace Statecraft.Game.UI
                 System.Action h = () => Toggle(screen);
                 b.clicked += h;
                 hooks.Add((b, h));
+
+                // an X on the screen itself closes it: a phone has no Escape, and re-tapping the lit rail button is not
+                // discoverable (playtest v0.1.1). The same Close() as Escape, so the focus return is identical.
+                var header = root.Q("screen-" + screen)?.Q(className: "screen-header");
+                if (header == null) continue;
+                var x = new Button(() => Close()) { name = "screen-close-" + screen, text = "X" };
+                x.AddToClassList("screen-close");
+                header.Add(x);
+                closes.Add(x);
             }
             Open(null);
+            FitCloseButtons();
+        }
+
+        /// <summary>The X's hit area: 44 screen px at every window size (#1035's ruling), so in panel units it grows as
+        /// the panel shrinks (<paramref name="scale"/> is screen px per panel px; the 1280x720 window scales about 2/3,
+        /// so 44 panel px would render as about 29 px there). On the web a screen pixel is a CSS pixel: the canvas is
+        /// drawn in device pixels, so the target is <paramref name="dpr"/> device px per CSS px (HudPresenter.cs's text
+        /// floor counts the same way, DevicePixelRatio.jslib). Off the web <paramref name="dpr"/> is 1.</summary>
+        internal static float CloseTargetPanelPx(float scale, float dpr = 1f) =>
+            scale > 0f ? 44f * (dpr > 0f ? dpr : 1f) / scale : 44f;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // The panel scales by the canvas's device pixels, so a screen pixel here is a CSS pixel: the device's pixels / the
+        // browser's devicePixelRatio (DevicePixelRatio.jslib; the same import as HudPresenter's text floor).
+        [System.Runtime.InteropServices.DllImport("__Internal")] static extern float StatecraftDevicePixelRatio();
+        static float DevicePixelRatio() { var r = StatecraftDevicePixelRatio(); return r > 0f ? r : 1f; }
+#else
+        static float DevicePixelRatio() => 1f;
+#endif
+
+        void FitCloseButtons()
+        {
+            var px = CloseTargetPanelPx(root.panel?.scaledPixelsPerPoint ?? 1f, DevicePixelRatio());
+            var r = new StyleLength(new Length(px / 2f));
+            foreach (var x in closes)
+            {
+                x.style.width = px; x.style.height = px;
+                x.style.borderTopLeftRadius = r; x.style.borderTopRightRadius = r;
+                x.style.borderBottomLeftRadius = r; x.style.borderBottomRightRadius = r;
+
+                // Pad both sides of the header here, not in the stylesheet: a grown X (66 panel px at 1280x720, 89 at
+                // 390x844) would cover the title's end under the old fixed 52 px, and one inline rule serves both
+                // languages. Also grow the header so the X (top 6 px + px) fits inside it, with its 4 px bottom
+                // padding and 1 px border.
+                var header = x.parent;
+                if (header == null) continue;
+                header.style.paddingLeft = new StyleLength(px + 8f);
+                header.style.paddingRight = new StyleLength(px + 8f);
+                header.style.minHeight = new StyleLength(px + 6f + 5f);
+            }
         }
 
         public void Dispose()
         {
             foreach (var (b, h) in hooks) b.clicked -= h;
             hooks.Clear();
+            foreach (var x in closes) x.RemoveFromHierarchy();
+            closes.Clear();
             root.UnregisterCallback(onCancel, TrickleDown.TrickleDown);
+            root.UnregisterCallback(onGeometry);
             var r = root.Q("root") ?? root;
             r.RemoveFromClassList(WideOpenClass); r.RemoveFromClassList(ScreenOpenClass);
             DisableCovered(root);

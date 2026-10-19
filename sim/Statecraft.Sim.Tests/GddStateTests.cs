@@ -62,11 +62,13 @@ public class GddStateTests
                              new City("a", 1, 1, 2, 1, 1), new City("a", 1, 1, 1, 2, 1), new City("a", 1, 1, 1, 1, 2) };
         Assert.Equal(cities.Length, new HashSet<string>(Array.ConvertAll(cities, H)).Count);
         var units = new[] { new Unit(1, "halutz", 0, 0), new Unit(2, "halutz", 0, 0), new Unit(1, "recruit", 0, 0), new Unit(1, "halutz", 1, 0), new Unit(1, "halutz", 0, 1),
-                            new Unit(1, "halutz", 0, 0, 1) };
+                            new Unit(1, "halutz", 0, 0, 1), new Unit(1, "halutz", 0, 0, side: "israel"), new Unit(1, "halutz", 0, 0, strength: 1),
+                            new Unit(1, "halutz", 0, 0, order: "hold"), new Unit(1, "halutz", 0, 0, order: "hold", orderTarget: "2") };
         Assert.Equal(units.Length, new HashSet<string>(Array.ConvertAll(units, U)).Count);
         string K(Cohort k) { var s = new GameState(); s.Cohorts.Add(k.Id, k); return s.Hash(); }
         var cohorts = new[] { new Cohort(1, "recruit", "a", 1, 1), new Cohort(2, "recruit", "a", 1, 1), new Cohort(1, "halutz", "a", 1, 1),
-                              new Cohort(1, "recruit", "b", 1, 1), new Cohort(1, "recruit", "a", 2, 1), new Cohort(1, "recruit", "a", 1, 2) };
+                              new Cohort(1, "recruit", "b", 1, 1), new Cohort(1, "recruit", "a", 2, 1), new Cohort(1, "recruit", "a", 1, 2),
+                              new Cohort(1, "recruit", "a", 1, 1, arms: 1) };
         Assert.Equal(cohorts.Length, new HashSet<string>(Array.ConvertAll(cohorts, K)).Count);
         string W(SiteWork w) { var s = new GameState(); s.Sites[w.Site] = w; return s.Hash(); }
         var works = new[] { new SiteWork("a", 1, 1, null), new SiteWork("b", 1, 1, null), new SiteWork("a", 2, 1, null), new SiteWork("a", 1, 2, null),
@@ -116,6 +118,18 @@ public class GddStateTests
         Assert.Equal("a=1,2,3,1,0", none.Canonical());
         Assert.Equal("a=1,2,3,1,0,4", none.WithRecruits(4).Canonical());
         Assert.Equal(4, none.WithRecruits(4).WithCounts(5, 1, 0).Recruits);   // a change of counts keeps the recruits
+    }
+
+    // R-LOOP-002, R-CRAFT-001, R-CITY-009: defaults preserve the old text; only non-zero craftsmen and a manual job
+    // standing order add fields.
+    [Fact]
+    public void CraftsmenAndTheJobDefaultReachTheHashOnlyWhenSet()
+    {
+        var none = new City("a", 1, 2, 3, 1, 0);
+        Assert.Equal("a=1,2,3,1,0", none.Canonical());
+        Assert.Equal("a=1,2,3,1,0,craftsmen=2", none.WithCraftsmen(2).Canonical());
+        Assert.Equal("a=1,2,3,1,0,jobs=manual", none.WithJobsDefault(false).Canonical());
+        Assert.Equal(2, none.WithCraftsmen(2).WithCounts(4, 1, 0).Craftsmen);
     }
 
     [Fact]

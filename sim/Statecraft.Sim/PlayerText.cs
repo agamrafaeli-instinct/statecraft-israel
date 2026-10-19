@@ -21,6 +21,8 @@ namespace Statecraft.Sim
             GameOverCodes.EraEnded => "The chapter has ended",
             GameOverCodes.MvpEnded => "The game has reached its last turn",
             GameOverCodes.CoalitionCollapse => "The coalition collapsed",
+            // Interim: the plan's short option (a) wording. The defeat texts are the owner's pick (Q-DEF-4, #784, open).
+            GameOverCodes.DefeatEconomy => "Money and Food ran out",
             _ => throw Unknown("game over reason", code),
         };
 
@@ -119,7 +121,7 @@ namespace Statecraft.Sim
             return Signed(r, "", Fixed(Math.Abs(r), decimals) + "%", signed: true);
         }
 
-        /// <summary>"+5 units" for a change to a whole-unit national stock (the Food pool; R-EFX-001).</summary>
+        /// <summary>"+5 units" for a change to a whole-unit national stock (the Food and Arms pools; R-EFX-001).</summary>
         public static string UnitsChange(double change)
         {
             var r = Math.Round(Finite(change, nameof(change)), 0, MidpointRounding.AwayFromZero);
@@ -128,7 +130,7 @@ namespace Statecraft.Sim
 
         /// <summary>"Morale +4.1%" or "Treasury -IL 2.0m": the name and the change, in the target's unit.</summary>
         public static string Change(Content c, string id, double change) =>
-            (id == Pools.FoodTarget ? "Food" : Target(c, id)) + " "
-            + (id == Pools.FoodTarget ? UnitsChange(change) : IsMoney(c, id) ? MoneyChange(c, id, change) : PercentChange(change));
+            (id == Pools.FoodTarget ? "Food" : id == Pools.ArmsTarget ? "Arms" : Target(c, id)) + " "
+            + (id == Pools.FoodTarget || id == Pools.ArmsTarget ? UnitsChange(change) : IsMoney(c, id) ? MoneyChange(c, id, change) : PercentChange(change));
     }
 }

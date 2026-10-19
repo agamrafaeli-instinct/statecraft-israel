@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Statecraft.Sim;
+using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 
 /// <summary>The designated sites (Phase 1 PR 5, Task 5.1): content/sites.yaml holds sourced facts only (the site, its names,
@@ -70,19 +71,75 @@ public class SitesContentTests
 
     /// <summary>R-SITE-004, Q-SITE-1 and Q-SITE-2 (owner, 17 October 2026, #782: "take all of the plan's recommendations"): the
     /// MVP's yishuv sites are the four of the settlements note whose founding day two sources agree on (criteria 1, 2 and 4 of
-    /// Task 5.0). Each is founded inside the MVP's years and cites at least two sources with a checked date.</summary>
+    /// Task 5.0). Each is founded inside the MVP's years and cites at least two sources with a checked date. Kiryat Shmona and
+    /// Beit Shemesh join them (owner, 17 October 2026, #782 "Sign off now"); their days are the owner's (#785,
+    /// issuecomment-6237624501): 18 July 1949, and December 1950 under the monthly turn, 15 December 1950.</summary>
     [Fact]
     public void TheMvpYishuvSitesAreTheSourcedList()
     {
         var c = ContentLoader.Load(RealContentTests.ContentRoot());
         var yishuvim = c.Sites.Where(x => x.Kinds.Contains("yishuv")).ToList();
-        Assert.Equal(new[] { "beit_kama", "gilat", "mefalsim", "reim" }, yishuvim.Select(x => x.Id).OrderBy(x => x, StringComparer.Ordinal));
+        Assert.Equal(new[] { "beit_kama", "beit_shemesh", "gilat", "kiryat_shmona", "mefalsim", "reim" }, yishuvim.Select(x => x.Id).OrderBy(x => x, StringComparer.Ordinal));
         var founded = yishuvim.ToDictionary(x => x.Id, x => x.Founded);
         Assert.Equal(new DateTime(1949, 4, 18), founded["beit_kama"]);
+        Assert.Equal(new DateTime(1950, 12, 15), founded["beit_shemesh"]);
         Assert.Equal(new DateTime(1949, 12, 4), founded["gilat"]);
+        Assert.Equal(new DateTime(1949, 7, 18), founded["kiryat_shmona"]);
         Assert.Equal(new DateTime(1949, 6, 12), founded["mefalsim"]);
         Assert.Equal(new DateTime(1949, 10, 20), founded["reim"]);
+        // Each hex is the one tools/hexgrid.py gives for the row's sourced point (the CBS point for the two that joined, rows 7
+        // and 16 of the settlements note), so moving a row to another hex is a content change a test sees.
+        var hexes = yishuvim.ToDictionary(x => x.Id, x => (x.Q, x.R));
+        Assert.Equal((-8, 28), hexes["beit_kama"]);
+        Assert.Equal((-3, 24), hexes["beit_shemesh"]);
+        Assert.Equal((-10, 30), hexes["gilat"]);
+        Assert.Equal((14, 2), hexes["kiryat_shmona"]);
+        Assert.Equal((-10, 27), hexes["mefalsim"]);
+        Assert.Equal((-12, 29), hexes["reim"]);
         Assert.All(yishuvim, x => Assert.True(x.Sources.Count(s => s.Checked != default) >= 2, x.Id));
+    }
+
+    /// <summary>Q-CAMP-2 (owner, 17 October 2026, #785: "Both"): the camp sites are Camp 80 near Pardes Hanna and Tzrifin, both
+    /// military camps (owner, "Both military", 17 October 2026, #927), each for its nearest MVP city (Q-CAMP-1, R-CAMP-002).</summary>
+    [Fact]
+    public void TheMvpCampSitesAreCamp80AndTzrifin()
+    {
+        var c = ContentLoader.Load(RealContentTests.ContentRoot());
+        var camps = c.Sites.Where(Projects.IsCamp).Select(x => (x.Id, x.Name, string.Join(",", x.Kinds), x.City));
+        Assert.Equal(new[] { ("camp_80", "Camp 80", "military_camp", "hadera"), ("tzrifin", "Tzrifin", "military_camp", "rishon_lezion") }, camps);
+    }
+
+    /// <summary>R-CAMP-002 (owner, 17 October 2026, #927): a camp site's city is the MVP city nearest by hex distance, and a tie
+    /// goes to the nearest by km. Camp 80 has one city a hex away, Hadera. Tzrifin has four, and Rishon LeZion, about 3.9 km
+    /// away, is the nearest of them.</summary>
+    // R-CAMP-002
+    [Fact]
+    public void ACampSiteServesTheNearestCityByHexThenByKm()
+    {
+        var root = RealContentTests.ContentRoot();
+        var c = ContentLoader.Load(root);
+        // The point each camp row's hex comes from, as the row's comment in sites.yaml gives it (Hebrew Wikipedia).
+        var sitePoints = new Dictionary<string, (double Lat, double Lon)> { ["camp_80"] = (32.4628, 34.9866), ["tzrifin"] = (31.9587, 34.8395) };
+        var yaml = new YamlStream();
+        using (var r = new StringReader(File.ReadAllText(Path.Combine(root, "map", "settlements_1948.yaml")))) yaml.Load(r);
+        var rows = (YamlSequenceNode)((YamlMappingNode)yaml.Documents[0].RootNode)[new YamlScalarNode("settlements")];
+        string Scalar(YamlMappingNode m, string key) => ((YamlScalarNode)m[new YamlScalarNode(key)]).Value!;
+        var cityPoints = rows.Cast<YamlMappingNode>().ToDictionary(m => Scalar(m, "id"),
+            m => (Lat: double.Parse(Scalar(m, "lat"), CultureInfo.InvariantCulture), Lon: double.Parse(Scalar(m, "lon"), CultureInfo.InvariantCulture)));
+        // Straight-line km on a local flat projection; at a few km the curvature is far below the gaps between the cities.
+        static double Km((double Lat, double Lon) a, (double Lat, double Lon) b) =>
+            111.32 * Math.Sqrt(Math.Pow(a.Lat - b.Lat, 2) + Math.Pow((a.Lon - b.Lon) * Math.Cos((a.Lat + b.Lat) / 2 * Math.PI / 180), 2));
+        var hexes = c.SettlementHexes.ToDictionary(x => x.Id);
+        var nearest = new Dictionary<string, string[]>();
+        foreach (var site in c.Sites.Where(Projects.IsCamp))
+        {
+            var byHex = c.Cities.Select(x => (x.Id, Hexes: MapActions.Distance(site.Q, site.R, hexes[x.Id].Q, hexes[x.Id].R))).ToList();
+            var tied = byHex.Where(x => x.Hexes == byHex.Min(y => y.Hexes)).Select(x => x.Id).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+            nearest[site.Id] = tied;
+            Assert.Equal(tied.OrderBy(x => Km(sitePoints[site.Id], cityPoints[x])).First(), site.City);
+        }
+        Assert.Equal(new[] { "hadera" }, nearest["camp_80"]);
+        Assert.Equal(new[] { "petah_tikva", "rehovot", "rishon_lezion", "tel_aviv" }, nearest["tzrifin"]);
     }
 
     /// <summary>Q-FIELD-1 and Q-SITE-3 (#782): each yishuv site has one field site in its own hex, and no other site shares a

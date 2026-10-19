@@ -1,5 +1,15 @@
 # GDD feature sections
 
+The [GDD](../GDD.md) is the design of record. Map-production priorities and historical location records are in the
+separate [Locations specification](../locations.md); the authoring workflow is in [Map editor](map-editor.md).
+The terrain/tile/hex-type catalogue remains **TBD in the GDD**, while the approved biome-based movement framework
+is retained in [Military and combat](military-combat.md).
+
+For map work, read the location roster together with [Cities and absorption](cities.md), [Build yishuv](build-yishuv.md)
+and [Corridors](corridors.md). [Settlement control](settlement-control.md) defines which places may become control targets;
+a location's map priority does not add a city economy, replace a founding objective or select such a target. Existing
+supported places remain supported even when additional authoring is optional.
+
 One file per feature in this folder, copied from [TEMPLATE.md](TEMPLATE.md). The shape (player story, rules, data touched,
 done-when, out of scope, sources, open questions) is a starting point; the maintainers and the GDD writers own it. Change the
 template and the linter together.

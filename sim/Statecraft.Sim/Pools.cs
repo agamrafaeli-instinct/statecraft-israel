@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Statecraft.Sim
 {
@@ -17,6 +18,12 @@ namespace Statecraft.Sim
         /// <summary>The event-effect target that moves the Food stock itself (R-EFX-001).</summary>
         public const string FoodTarget = "food";
 
+        /// <summary>The event-effect target that moves the Arms stock (R-EFX-001, #781).</summary>
+        public const string ArmsTarget = "arms";
+
+        /// <summary>The command kind that buys Arms with Money (R-ARMS-002).</summary>
+        public const string BuyArmsKind = "buy_arms";
+
         /// <summary>R-FOOD-001: the stock starts at cover_months of the start's need, so food_supply starts at its level.</summary>
         public static void Init(Content c, GameState s)
         {
@@ -25,10 +32,40 @@ namespace Statecraft.Sim
             s.FoodNeed = Need(s, r);
             s.Food = r.CoverMonths!.Value * s.FoodNeed;
             s.FoodUnmet = 0;
+            s.Arms = r.ArmsStart!.Value;   // R-ARMS-001; the loader requires it in the GDD loop
+        }
+
+        /// <summary>R-ARMS-002 (D-G6): <paramref name="count"/> Arms join the stock at once, and the Treasury pays
+        /// count * arms_price, borrowing what it lacks (R-MONEY-003). Refused, state untouched, for fewer than one unit or a
+        /// stock that would pass a whole number's range. Step has already refused it in the legacy loop.</summary>
+        public static string? BuyArms(Content c, GameState s, int count, List<Cause> why)
+        {
+            if (count < 1) return "Buy at least 1 Arms";
+            if ((long)s.Arms + count > int.MaxValue) return "That is more Arms than the stock can hold";
+            var cost = count * c.RulesAt(s.Date).Mvp!.ArmsPrice!.Value;
+            EconomySystem.PayOrBorrow(c, s, cost, "for Arms", why);
+            s.Arms += count;
+            why.Add(new Cause("economy", "arms", count, FormattableString.Invariant($"Bought {count} Arms, cost {PlayerText.Money(c, "treasury", cost)}")));
+            return null;
         }
 
         /// <summary>The nation's need for one turn: its head count in population units, rounded half away from zero.</summary>
         static int Need(GameState s, MvpRules r) => (int)Math.Round(s.TotalPopulation / r.PeoplePerUnit, MidpointRounding.AwayFromZero);
+
+        /// <summary>R-FIELD-002, step 6 after the cities' production (D-A6): in ordinal site id order, every plowed field (a built
+        /// field site, R-FIELD-001) adds field_food_per_turn to the stock, with no workers (Q-FIELD-2). It comes before the
+        /// nation eats in step 7, so in a turn with imports the import only tops the stock up by less.</summary>
+        public static void Harvest(Content c, GameState s, MvpRules r, List<Cause> why)
+        {
+            var yield = r.FieldFoodPerTurn!.Value;   // the loader requires it in the GDD loop
+            if (yield == 0) return;
+            foreach (var f in c.Sites.Where(x => x.Kinds.Contains(Projects.FieldKind)).OrderBy(x => x.Id, StringComparer.Ordinal))
+            {
+                if (!(s.Sites.TryGetValue(f.Id, out var w) && w.BuiltOn != null)) continue;
+                s.Food += yield;
+                why.Add(new Cause("economy", "food", yield, FormattableString.Invariant($"{f.Name}: the plowed land yielded {yield} units of Food")));
+            }
+        }
 
         /// <summary>R-FOOD-002, step 7: the nation eats the turn's need from the stock, as far as the stock goes (it stops at
         /// 0, and the rest is unmet), then the import brings the stock back to cover_months of the need, unless foreign
