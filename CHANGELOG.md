@@ -14,12 +14,34 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
   geometry event (a per-frame poll); desktops and notch-free phones are unchanged.
 
 ### Added
+- An opt-in Civilization-style hex-tile map (`?hex-tiles`, desktop `-hex-tiles`; `?hex-tiles=tel_aviv_crop` for the
+  Tel Aviv crop): one-file hex prototypes (towns, orchards, fields, forests, hills), units as their own layer, painted
+  ground, a landscape ring round the play hexes and a warmer light while it is on. Presentation only; off by default,
+  the shipped map is unchanged. Its models are local until their assets clear, so other machines draw stand-ins
+  (docs/hex-tiles/README.md; refs #18).
+- The Cabinet disc in the side menu shows a small gold badge while a post is vacant that the player can fill this turn,
+  and its tip says so in English and Hebrew. The sim's `Cabinet.Vacancies` decides it (a vacant seat, someone may be
+  appointed, no appointment to it queued, the game not over, and enough Attention left after this turn's queued orders,
+  priced by the sim's new `AttentionSystem.Price`/`Left`, which `SimBridge` now uses too); the UI only reads it (refs #1109).
 - Unit cards show the sourced Hebrew unit name in the Hebrew UI, with an English fallback. INS Haganah gains its
   sourced Hebrew name, still flagged for a native speaker's review (#902).
 ### Fixed
+- Keep the opt-in hex terrain overlay out of automatic neighboring with the real map terrain.
+- Keep the capsule-collider dependency used while creating hex unit stand-ins in stripped player builds; the temporary collider is still removed.
+- Missing unit models on the opt-in hex-tile map use an owned copy of the shipped material in player builds.
+- The opt-in hex-tile map regenerates cached stand-in meshes released by an editor scene change.
+- The opt-in hex-tile map preserves settlement marker visibility when removed or rebuilt, and missing vehicle models
+  keep their declared box stand-in and footprint size.
 - The Cabinet, Budget, Defence, Why, How to play and Settings screens each gain an X in the header that closes
   them (the same close as Escape): a phone has no Escape key, and re-tapping the lit rail button was the only way
   out (v0.1.1 playtest feedback).
+- The national Arms pool in the GDD loop (R-ARMS-001 to R-ARMS-003; fixes #781): one Arms is the equipment package for a
+  1,000-person recruit group, and the state holds 12 on 15 May 1948. A `BuyArms(count)` order pays IL 1m an Arms,
+  borrows a short Treasury and costs 1 Attention whatever the count; recruit training takes 1 Arms a group when it
+  starts and is refused with a reason without one; cancelling the group gives those Arms back (#1047). The owner
+  approved all four values (#781); they are labelled design values. An event option can also move the stock with an
+  `arms` effect, in whole units and never below 0, and the no-gain rule for sensitive events covers it (R-EFX-001,
+  R-EFX-002); no event uses it yet. The goldens move only by the new `arms=12` line.
 
 ## [0.1.2] - 2026-10-19
 

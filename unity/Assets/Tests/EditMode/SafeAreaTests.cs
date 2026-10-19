@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using Statecraft.Game.UI;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UIElements;
@@ -29,25 +30,35 @@ public class SafeAreaTests
     public IEnumerator TheRootIsPaddedAndDisposePutsItBack()
     {
         using var ui = new UiTestKit();
-        var fit = new SafeAreaFit(ui.Root);
-        // The first layout fires Update(), which reads the editor's whole-screen safe area and applies zeros: let it
-        // pass before the test's insets go in, or it wipes them.
+        var insets = (l: 0f, r: 0f, t: 0f, b: 0f);
+        using var fit = new SafeAreaFit(ui.Root, () => insets);
+        // Let the first layout settle, then keep the reader consistent with the synthetic insets under test.
+        // The production poll remains active; it must not replace this fixture's padding with editor screen margins.
         for (int i = 0; i < 20 && float.IsNaN(ui.Root.resolvedStyle.width); i++) yield return null;
         yield return null; yield return null;
-        fit.Apply(10, 20, 47, 34);
+        insets = (10f, 20f, 47f, 34f);
+        fit.Apply(insets.l, insets.r, insets.t, insets.b);
         // What Apply wrote, exactly; the resolved padding snaps to the panel's pixel grid (47 -> 46.29 at this scale).
         Assert.AreEqual(47f, ui.Root.style.paddingTop.value.value, 1e-3f, "the notch's inset pads the root");
         Assert.AreEqual(34f, ui.Root.style.paddingBottom.value.value, 1e-3f, "the home indicator's inset");
         Assert.AreEqual(10f, ui.Root.style.paddingLeft.value.value, 1e-3f);
         Assert.AreEqual(20f, ui.Root.style.paddingRight.value.value, 1e-3f);
-        for (int i = 0; i < 10 && ui.Root.resolvedStyle.paddingTop < 45f; i++) yield return null;
+        for (int i = 0; i < 10 && ui.Root.resolvedStyle.paddingTop < 45f; i++)
+        {
+            EditorApplication.QueuePlayerLoopUpdate();
+            yield return null;
+        }
         Assert.AreEqual(47f, ui.Root.resolvedStyle.paddingTop, 1f, "the layout follows, snapped to the pixel grid");
         Assert.AreEqual(34f, ui.Root.resolvedStyle.paddingBottom, 1f);
         Assert.GreaterOrEqual(ui.Q<VisualElement>("top-bar").worldBound.yMin, 47f - 1f, "the top bar moves down out of the notch");
         fit.Dispose();
         Assert.AreEqual(StyleKeyword.Null, ui.Root.style.paddingTop.keyword, "Dispose resets the style");
         Assert.AreEqual(StyleKeyword.Null, ui.Root.style.paddingLeft.keyword);
-        for (int i = 0; i < 10 && ui.Root.resolvedStyle.paddingTop > 0f; i++) yield return null;
+        for (int i = 0; i < 10 && ui.Root.resolvedStyle.paddingTop > 0f; i++)
+        {
+            EditorApplication.QueuePlayerLoopUpdate();
+            yield return null;
+        }
         Assert.AreEqual(0f, ui.Root.resolvedStyle.paddingTop, 1f, "Dispose resets the padding");
     }
 
@@ -59,13 +70,32 @@ public class SafeAreaTests
     {
         using var ui = new UiTestKit();
         var insets = (l: 47f, r: 0f, t: 0f, b: 0f);
-        using var fit = new SafeAreaFit(ui.Root, () => insets);
+        int reads = 0;
+        using var fit = new SafeAreaFit(ui.Root, () => { reads++; return insets; });
         for (int i = 0; i < 20 && float.IsNaN(ui.Root.resolvedStyle.width); i++) yield return null;
         yield return null; yield return null;
         Assert.AreEqual(47f, ui.Root.style.paddingLeft.value.value, 1e-3f, "settled: the left inset pads the left");
+        var bounds = ui.Root.layout;
         insets = (0f, 47f, 0f, 0f);   // the notch moved to the right edge; the bounds did not change
-        for (int i = 0; i < 30; i++) yield return null;
+        // A quiet EditMode runtime panel needs player-loop requests to service scheduled callbacks.
+        for (int i = 0; i < 30; i++)
+        {
+            EditorApplication.QueuePlayerLoopUpdate();
+            yield return null;
+        }
+        Assert.AreEqual(bounds, ui.Root.layout, "the root bounds did not change");
         Assert.AreEqual(47f, ui.Root.style.paddingRight.value.value, 1e-3f, "the poll moved the padding to the right");
         Assert.AreEqual(0f, ui.Root.style.paddingLeft.value.value, 1e-3f, "and cleared the left");
+        fit.Dispose();
+        int stoppedReads = reads;
+        insets = (12f, 34f, 56f, 78f);
+        for (int i = 0; i < 10; i++)
+        {
+            EditorApplication.QueuePlayerLoopUpdate();
+            yield return null;
+        }
+        Assert.AreEqual(stoppedReads, reads, "Dispose stops polling the reader");
+        Assert.AreEqual(StyleKeyword.Null, ui.Root.style.paddingLeft.keyword);
+        Assert.AreEqual(StyleKeyword.Null, ui.Root.style.paddingRight.keyword);
     }
 }
