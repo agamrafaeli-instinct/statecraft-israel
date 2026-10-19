@@ -11,6 +11,13 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 - On a notched phone the HUD and the panels keep clear of the notch and the home indicator: the root is padded by
   the browser's `env(safe-area-inset-*)` values (the camera's top inset and the map labels follow as before); desktops
   and notch-free phones are unchanged.
+### Added
+- Unit cards show the sourced Hebrew unit name in the Hebrew UI, with an English fallback. INS Haganah gains its
+  sourced Hebrew name, still flagged for a native speaker's review (#902).
+### Fixed
+- The Cabinet, Budget, Defence, Why, How to play and Settings screens each gain an X in the header that closes
+  them (the same close as Escape): a phone has no Escape key, and re-tapping the lit rail button was the only way
+  out (v0.1.1 playtest feedback).
 
 ## [0.1.2] - 2026-10-19
 
