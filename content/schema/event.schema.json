@@ -114,7 +114,7 @@
               "additionalProperties": false,
               "required": ["target", "delta"],
               "properties": {
-                "target": { "type": "string", "minLength": 1, "description": "An indicator id from model.yaml, or a special target: treasury or fx_reserves (game money), food (the national Food stock, whole units; the Arms target arrives with its pool, #781)." },
+                "target": { "type": "string", "minLength": 1, "description": "An indicator id from model.yaml, or a special target: treasury or fx_reserves (game money), food (the national Food stock, whole units) or arms (the national Arms stock, whole units; #781)." },
                 "delta": { "type": "number" }
               }
             }
@@ -151,6 +151,11 @@
               "then": { "properties": { "delta": { "minimum": -1, "maximum": 1 } } },
               "else": { "properties": { "delta": { "type": "integer", "minimum": -2147483647, "maximum": 2147483647 } } }
             }
+          },
+          "unlock_projects": {
+            "type": "array",
+            "description": "R-EFX-008 (GDD loop only): projects.yaml ids of locked kinds this option makes available to StartProject. A sensitive event may not unlock (R-EFX-005).",
+            "items": { "type": "string", "minLength": 1 }
           },
           "alternative": { "$ref": "#/definitions/alternative" }
         }

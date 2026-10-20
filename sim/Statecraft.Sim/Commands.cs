@@ -103,6 +103,15 @@ namespace Statecraft.Sim
         public StopWork(int unit) { Unit = unit; }
     }
 
+    /// <summary>Gives unit <see cref="Unit"/> the standing order <see cref="Order"/>, fortify or hold (Orders.Give, R-ORDER-001
+    /// to R-ORDER-003). GDD v0.1 loop only.</summary>
+    public sealed class UnitOrder : Command
+    {
+        public override string Kind => Orders.Kind;
+        public int Unit { get; } public string Order { get; }
+        public UnitOrder(int unit, string order) { Unit = unit; Order = order; }
+    }
+
     /// <summary>Starts city project <see cref="ProjectKind"/> (a projects.yaml id) for <see cref="City"/> on hex (<see cref="Q"/>,
     /// <see cref="R"/>) (Projects.StartCity, R-PROJ-001). GDD v0.1 loop only.</summary>
     public sealed class StartProject : Command
@@ -119,6 +128,14 @@ namespace Statecraft.Sim
         public override string Kind => Projects.CancelProjectKind;
         public int Project { get; }
         public CancelProject(int project) { Project = project; }
+    }
+
+    /// <summary>Buys <see cref="Count"/> Arms with Money (Pools.BuyArms, R-ARMS-002, D-G6). GDD v0.1 loop only.</summary>
+    public sealed class BuyArms : Command
+    {
+        public override string Kind => Pools.BuyArmsKind;
+        public int Count { get; }
+        public BuyArms(int count) { Count = count; }
     }
 
     public sealed class Rejection
@@ -154,8 +171,10 @@ namespace Statecraft.Sim
                     case CancelTraining _: break;
                     case PioneerWork p: Text(p.Action, "Action"); Text(p.Site, "Site"); break;
                     case StopWork _: break;
+                    case UnitOrder o: Text(o.Order, "Order"); break;
                     case StartProject p: Text(p.ProjectKind, "ProjectKind"); Text(p.City, "City"); break;
                     case CancelProject _: break;
+                    case BuyArms _: break;
                     case SetMobilization _: case SecurityOrder _: break;
                     default: throw new ArgumentException("unknown command type " + cmd.GetType().Name, "commands");
                 }

@@ -9,13 +9,13 @@ namespace Statecraft.Sim
     static class EventRules
     {
         public static readonly HashSet<string> SensitiveTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "holocaust", "terror", "massacre", "war-casualties", "displacement" };
-        public static readonly HashSet<string> SpecialTargets = new HashSet<string> { "treasury", "fx_reserves", Pools.FoodTarget };
+        public static readonly HashSet<string> SpecialTargets = new HashSet<string> { "treasury", "fx_reserves", Pools.FoodTarget, Pools.ArmsTarget };
         /// <summary>Targets a sensitive event's options may not raise (CONTENT_POLICY section 4: no mechanic rewards violence against
         /// civilians). Owner decision of 15 October 2026 on Q-EFX-2, "Extend it": every resource, not money alone. Until the
         /// GDD resources exist as targets the legacy indicators stand for them: Money (treasury, fx_reserves), Food
         /// (food_supply), Social cohesion (morale) and International Support (intl_standing). Food also has its own target
-        /// (`food`, R-EFX-001); Arms has no target yet and joins the rule with its pool (#781).</summary>
-        public static readonly HashSet<string> NoGainTargets = new HashSet<string> { "treasury", "fx_reserves", Pools.FoodTarget, "food_supply", "morale", "intl_standing" };
+        /// (`food`, R-EFX-001); Arms joins the rule with its pool (#781).</summary>
+        public static readonly HashSet<string> NoGainTargets = new HashSet<string> { "treasury", "fx_reserves", Pools.FoodTarget, Pools.ArmsTarget, "food_supply", "morale", "intl_standing" };
 
         public static void Validate(Content c, HashSet<string> offices, HashSet<string> indicators)
         {
@@ -74,6 +74,9 @@ namespace Statecraft.Sim
                     if (!optionIds.Add(o.Id)) throw new ContentException(e.File, F($"options[{o.Id}].id"), "duplicate option id");
                     CheckPlaceholders(c, e, F($"options[{o.Id}].text"), o.Text, offices);
                     if (o.Alternative != null) CheckAlternative(e, o, F($"options[{o.Id}].alternative"));
+                    // R-ALT-004: an option that did not happen says who proposed it, or that it is a design assumption.
+                    if (!o.Historical && e.Options.Any(x => x.Historical) && o.Alternative == null)
+                        throw new ContentException(e.File, F($"options[{o.Id}].alternative"), "an option that did not happen says who proposed it, or basis: design");
                     foreach (var kv in o.SetPolicy)
                     {
                         if (c.Policies.All(p => p.Id != kv.Key)) throw new ContentException(e.File, F($"options[{o.Id}].set_policy.{kv.Key}"), "unknown policy");
@@ -87,8 +90,8 @@ namespace Statecraft.Sim
                             throw new ContentException(e.File, F($"options[{o.Id}].effects.{fx.Target}"), "unknown target");
                         Active(F($"options[{o.Id}].effects.{fx.Target}"), fx.Target);
                         ContentLoader.Finite(e.File, F($"options[{o.Id}].effects.{fx.Target}.delta"), fx.Delta);
-                        if (fx.Target == Pools.FoodTarget && Math.Abs(fx.Delta) > int.MaxValue)
-                            throw new ContentException(e.File, F($"options[{o.Id}].effects.{fx.Target}"), "food delta out of range");
+                        if ((fx.Target == Pools.FoodTarget || fx.Target == Pools.ArmsTarget) && Math.Abs(fx.Delta) > int.MaxValue)
+                            throw new ContentException(e.File, F($"options[{o.Id}].effects.{fx.Target}"), $"{fx.Target} delta out of range");
                         if (sensitive && NoGainTargets.Contains(fx.Target) && fx.Delta > 0)
                             throw new ContentException(e.File, F($"options[{o.Id}].effects.{fx.Target}"), $"sensitive events cannot reward {fx.Target}");
                     }
@@ -111,10 +114,10 @@ namespace Statecraft.Sim
 
         static void CheckStructured(Content c, GameEvent e, EventOption o, bool sensitive, Func<string, string> F)
         {
-            if (o.GrantUnits.Count + o.CityEffects.Count == 0) return;
-            // They act on the GDD records (cities.yaml, unit_types.yaml, sites.yaml), which the legacy loop does not load.
+            if (o.GrantUnits.Count + o.CityEffects.Count + o.UnlockProjects.Count == 0) return;
+            // They act on the GDD records (cities.yaml, unit_types.yaml, sites.yaml, projects.yaml), which the legacy loop does not load.
             if (!c.IsGdd)
-                throw new ContentException(e.File, F($"options[{o.Id}].{(o.GrantUnits.Count > 0 ? "grant_units" : "city_effects")}"), "needs the GDD loop (eras.yaml systems.loop: gdd)");
+                throw new ContentException(e.File, F($"options[{o.Id}].{(o.GrantUnits.Count > 0 ? "grant_units" : o.CityEffects.Count > 0 ? "city_effects" : "unlock_projects")}"), "needs the GDD loop (eras.yaml systems.loop: gdd)");
             for (int i = 0; i < o.GrantUnits.Count; i++)
             {
                 var g = o.GrantUnits[i];
@@ -150,6 +153,16 @@ namespace Statecraft.Sim
                 else if (!(Math.Abs(x.Delta) <= int.MaxValue) || x.Delta != Math.Floor(x.Delta))
                     throw new ContentException(e.File, X(".delta"), "must be a whole number in the int range");
                 if (sensitive && x.Delta > 0) throw new ContentException(e.File, X(""), $"sensitive events cannot reward {x.Field}");
+            }
+            for (int i = 0; i < o.UnlockProjects.Count; i++)
+            {
+                // R-EFX-008. Unlocking a kind that starts unlocked would do nothing, so it is a mistake, as an unknown kind is.
+                var kind = o.UnlockProjects[i];
+                var field = F(FormattableString.Invariant($"options[{o.Id}].unlock_projects[{i}]"));
+                if (sensitive) throw new ContentException(e.File, field, "sensitive events cannot reward a project unlock");
+                var k = c.ProjectKinds.FirstOrDefault(x => x.Id == kind)
+                    ?? throw new ContentException(e.File, field, $"unknown city project '{kind}'");
+                if (!k.Locked) throw new ContentException(e.File, field, $"'{kind}' is not locked in projects.yaml");
             }
         }
 

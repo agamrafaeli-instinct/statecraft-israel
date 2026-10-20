@@ -344,7 +344,8 @@ namespace Statecraft.Sim
             //                              its historical one (R-ALT-001, R-ALT-002); the ids must exist, an event cannot
             //                              require itself and requirements cannot form a cycle (EventRules)
             //   options: [{ id, text, historical, recommended, effects: [{ target, delta }], set_rung, set_policy,
-            //              grant_units: [{ type, n, at }], city_effects: [{ city, field, delta }] }]
+            //              grant_units: [{ type, n, at }], city_effects: [{ city, field, delta }],
+            //              unlock_projects: [<projects.yaml id of a locked kind>] }]
             //   sources: [{ url, checked }], status
             //   objective                  the objective (objectives.yaml) whose completion card this is: it fires only once
             //                              that objective is recorded, and has exactly one option
@@ -1129,6 +1130,9 @@ namespace Statecraft.Sim
                 }
                 // R-CITY-003: the cities count arrivals from one day; another day in a later era would lose or double-count units.
                 if (m.CityArrivalsFrom == default) throw new ContentException(file, "mvp.city_arrivals_from", "required when eras.yaml systems.loop is gdd");
+                foreach (var kv in m.MinisterSystems)
+                    if (c.Offices.All(o => o.Id != kv.Value))
+                        throw new ContentException(file, $"mvp.minister_systems.{kv.Key}", $"unknown office '{kv.Value}'");
                 if (m.CityArrivalsFrom != c.Rules.Mvp!.CityArrivalsFrom) throw new ContentException(file, "mvp.city_arrivals_from", "must be the same in every era (the cities count arrivals from one day)");
                 if (m.BuildYishuvTurns < 1) throw new ContentException(file, "mvp.build_yishuv_turns", "must be >= 1");
                 if (!(m.BuildYishuvCost >= 0 && IsFinite(m.BuildYishuvCost))) throw new ContentException(file, "mvp.build_yishuv_cost", "must be a finite number >= 0");
@@ -1152,6 +1156,13 @@ namespace Statecraft.Sim
                 if (!(m.KFood >= 0 && m.KFood <= 1)) throw new ContentException(file, "mvp.k_food", "must be between 0 and 1");
                 if (m.CoverMonths == null) throw new ContentException(file, "mvp.cover_months", "required when eras.yaml systems.loop is gdd");
                 if (m.CoverMonths < 1) throw new ContentException(file, "mvp.cover_months", "must be >= 1");
+                // R-ARMS-001 to R-ARMS-003: required, so a missing key is never read as 0 (no stock, free Arms, or training without them).
+                if (m.ArmsStart == null) throw new ContentException(file, "mvp.arms_start", "required when eras.yaml systems.loop is gdd");
+                if (m.ArmsStart < 0) throw new ContentException(file, "mvp.arms_start", "must be >= 0");
+                if (m.ArmsPrice == null) throw new ContentException(file, "mvp.arms_price", "required when eras.yaml systems.loop is gdd");
+                if (!(m.ArmsPrice >= 0 && IsFinite(m.ArmsPrice.Value))) throw new ContentException(file, "mvp.arms_price", "must be a finite number >= 0");
+                if (m.ArmsPerRecruitGroup == null) throw new ContentException(file, "mvp.arms_per_recruit_group", "required when eras.yaml systems.loop is gdd");
+                if (m.ArmsPerRecruitGroup < 0) throw new ContentException(file, "mvp.arms_per_recruit_group", "must be >= 0");
                 // R-VET-001, R-VET-002: required, so a missing key is not read as 0 (a veteran after no work, or one that builds nothing).
                 foreach (var (key, v) in new[] { ("veteran_halutz_service", m.VeteranHalutzService), ("veteran_progress", m.VeteranProgress) })
                 {
@@ -1168,6 +1179,11 @@ namespace Statecraft.Sim
                 if (m.DefeatTurns < 1) throw new ContentException(file, "mvp.defeat_turns", "must be >= 1");
                 if (m.DebtCeiling == null) throw new ContentException(file, "mvp.debt_ceiling", "required when eras.yaml systems.loop is gdd");
                 if (!(m.DebtCeiling >= 0 && IsFinite(m.DebtCeiling.Value))) throw new ContentException(file, "mvp.debt_ceiling", "must be a finite number >= 0");
+                // R-ORDER-002, R-ORDER-003 (#746): required, so a missing key is never read as 0 (a unit with no defence).
+                if (m.FortifyDefencePercent == null) throw new ContentException(file, "mvp.fortify_defence_percent", "required when eras.yaml systems.loop is gdd");
+                if (m.FortifyDefencePercent < 1) throw new ContentException(file, "mvp.fortify_defence_percent", "must be >= 1");
+                if (m.HoldDefencePercent == null) throw new ContentException(file, "mvp.hold_defence_percent", "required when eras.yaml systems.loop is gdd");
+                if (m.HoldDefencePercent < 1) throw new ContentException(file, "mvp.hold_defence_percent", "must be >= 1");
                 // R-EVT-003 (#107): required, so a missing key is never read as 0 (no floor, or a disloyal minister who does nothing).
                 if (m.DelegationLoyaltyFloor == null) throw new ContentException(file, "mvp.delegation_loyalty_floor", "required when eras.yaml systems.loop is gdd");
                 if (m.DelegationLoyaltyFloor < 0 || m.DelegationLoyaltyFloor > 10) throw new ContentException(file, "mvp.delegation_loyalty_floor", "must be 0-10");

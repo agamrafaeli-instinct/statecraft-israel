@@ -69,7 +69,7 @@ namespace Statecraft.Sim
             s.Turn++;
             if (s.GameOver == null && s.Date >= end)
             {
-                // the legacy report (#19) will come before this once it exists
+                // #19's legacy report is EndReport.For, which the end screen reads once GameOver is set (D-H4)
                 s.GameOver = end == c.Eras[c.Eras.Count - 1].To ? GameOverCodes.EraEnded : GameOverCodes.MvpEnded;
                 why.Add(new Cause("era", s.GameOver, 0, PlayerText.GameOver(s.GameOver)));
             }
@@ -172,10 +172,14 @@ namespace Statecraft.Sim
                     return Projects.Start(c, s, p.Unit, p.Action, p.Site, why);
                 case StopWork w:
                     return Projects.Stop(c, s, w.Unit, why);
+                case UnitOrder o:
+                    return Orders.Give(s, o.Unit, o.Order, why);
                 case StartProject p:
                     return Projects.StartCity(c, s, p.ProjectKind, p.City, p.Q, p.R, why);
                 case CancelProject p:
                     return Projects.CancelCity(c, s, p.Project, why);
+                case BuyArms a:
+                    return Pools.BuyArms(c, s, a.Count, why);
                 case SecurityOrder o:
                     // long arithmetic: an extreme delta clamps to the ladder's end instead of wrapping around.
                     SecuritySystem.SetRung(c, s, (int)Math.Max(1L, Math.Min(5L, (long)s.Rung + o.Delta)), why);

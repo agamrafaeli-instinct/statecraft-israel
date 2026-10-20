@@ -53,6 +53,9 @@ public class DesignValuesTests
         ("rules.yaml", "mvp.overflow_condition_loss"),
         ("rules.yaml", "mvp.defeat_turns"),
         ("rules.yaml", "mvp.debt_ceiling"),
+        ("rules.yaml", "mvp.fortify_defence_percent"),   // R-ORDER-002, #746 (Q-HOLD-1)
+        ("rules.yaml", "mvp.hold_defence_percent"),      // R-ORDER-003, #746 (Q-HOLD-2)
+        ("rules.yaml", "attention_cost.unit_order"),     // R-ORDER-001, #746 (D-A6)
         ("rules.yaml", "mvp.delegation_loyalty_floor"),   // R-EVT-003, #107
         ("rules.yaml", "mvp.disloyal_effect_share"),
         // Q-START-1 (owner, 15 October 2026, #375): no city has a sourced housing stock or job count, so every city's
@@ -122,6 +125,11 @@ public class DesignValuesTests
         ("projects.yaml", "projects[industry].capacity"),
         ("projects.yaml", "projects[industry].condition"),
         ("projects.yaml", "projects[industry].job_slots"),
+        // The national Arms pool (Phase 2 PR 3b; #781, owner 18 October 2026: "Approve as drafted").
+        ("rules.yaml", "attention_cost.buy_arms"),
+        ("rules.yaml", "mvp.arms_start"),
+        ("rules.yaml", "mvp.arms_price"),
+        ("rules.yaml", "mvp.arms_per_recruit_group"),
     };
 
 
@@ -211,6 +219,7 @@ public class DesignValuesTests
         Assert.Equal((100, 5, 60), (m.ObjectivePoints, m.ObjectiveBonusPerMonth, m.ObjectiveBonusCap));   // D-B6, D-B2
         Assert.Equal((0.35, 0.15), (m.HousingStartCondition, m.OverflowConditionLoss));   // Q-START-3, Q-HOUSE-1 (D-D1)
         Assert.Equal((5, 0.5), (m.DelegationLoyaltyFloor, m.DisloyalEffectShare));   // R-EVT-003, #107 (D-H1)
+        Assert.Equal((12, 1.0, 1, 1.0), (m.ArmsStart, m.ArmsPrice, m.ArmsPerRecruitGroup, c.Rules.AttentionCost["buy_arms"]));   // #781 (D-G6)
         Assert.Equal(12, c.Cities.Count);
         foreach (var x in c.Cities)   // the listed housing and job values are the ones Cities.Init starts from
             Assert.Equal(((int)x.Housing!.Value, (int)x.Jobs!.Value), (x.HousingCapacity, x.JobSlots));
