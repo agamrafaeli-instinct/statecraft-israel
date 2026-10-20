@@ -7,10 +7,6 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
 
 ## [Unreleased]
 
-### Fixed
-- The browser page now fills a notched phone's whole screen (`viewport-fit=cover` in the WebGL template): iPhone
-  Safari letterboxed the game inside the safe area, so the notch and home-indicator insets read 0 and no safe-area
-  padding could apply (found on Agam's iPhone run; refs #1013).
 ### Added
 - An event option can unlock a city project (GDD Phase 7 PR 2, D-H2): a `projects.yaml` kind marked `locked: true` is
   refused by StartProject until an option with `unlock_projects` naming it has applied. The loader refuses an unknown
@@ -31,6 +27,9 @@ adds a line under **Unreleased**; CI's `Changelog` job checks this (see `CONTRIB
   golden is re-pinned.
 
 ### Fixed
+- The browser page now fills a notched phone's whole screen (`viewport-fit=cover` in the WebGL template): iPhone
+  Safari letterboxed the game inside the safe area, so the notch and home-indicator insets read 0 and no safe-area
+  padding could apply (found on Agam's iPhone run; refs #1013).
 - Fractional site and city-project carry is hashed as IEEE bits on every runtime, avoiding different decimal spellings on .NET and Unity Mono; gameplay progress is unchanged.
 - Site construction forecasts use the current minister rate and saved fractional work, including pioneer promotion.
 - On a notched phone the HUD and the panels keep clear of the notch and the home indicator: the root is padded by
