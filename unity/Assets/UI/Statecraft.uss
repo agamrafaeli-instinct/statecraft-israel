@@ -1041,15 +1041,13 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
    column's 46 px at the layer's 16 px, so a narrow window never lays the card over it. */
 .hud-tight .event-layer { padding-left: 54px; }
 .hud-tight.hud-three-row .event-layer { padding-left: 0; }
-/* The info panel never rises into the column: under the tight narrow and two-row bars it is capped below the column's
-   end (372 px and 448 px, with the 16 px margin); under the tight three-row bar it starts below the rail row and keeps
-   clear of the shrunken minimap (170 px). Content taller than the cap scrolls: the panel is a ScrollView now
-   (Game.uxml), its rows laid out by the scroll content container. */
+/* The info panel never rises into the bar or the side menu: on a tight window HudPresenter.FitInfoPanel caps its height
+   below the lower of them (the column, or the rail row on the three-row bar), and on the tight three-row window its
+   width clear of the shrunken minimap (170 px). The caps are set in code from laid-out bounds: Unity's USS has no
+   calc(). Content taller than the cap scrolls: the panel is a ScrollView now (Game.uxml), its rows laid out by the
+   scroll content container. */
 .info-panel .unity-scroll-view__content-container { flex-direction: row; align-items: flex-start; }
 .hud-two-row .info-panel.info-gdd-shown .unity-scroll-view__content-container { flex-wrap: wrap; }
-.hud-tight.hud-narrow .info-panel { max-height: calc(100% - 388px); }
-.hud-tight.hud-two-row .info-panel { max-height: calc(100% - 464px); }
-.hud-tight.hud-three-row .info-panel { max-width: calc(100% - 302px); max-height: calc(100% - 276px); }
 /* The minimap shrinks with the tight three-row window (MinimapPresenter fits the picture to the box). */
 .hud-tight.hud-three-row .minimap { width: 170px; height: 288px; }
 .hud-tight.hud-three-row .minimap-button, .hud-tight.hud-three-row .minimap-button .minimap-disc { width: 40px; height: 40px; }
