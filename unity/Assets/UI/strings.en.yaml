@@ -417,6 +417,11 @@ unit.defence: "Open the Defence screen"
 unit.order.move: "Move"
 unit.move_pick: "Choose a lit hex to move to"
 unit.move_queued: "Move ordered: the unit moves when you end the turn"
+# Fortify and Hold (#754): the names are Q-UI-2's, approved by the owner (#375). Fortify is set at the end of the turn (R-ORDER-002).
+unit.order.fortify: "Fortify"
+unit.order.hold: "Hold"
+unit.fortify_queued: "Fortify ordered: the unit is fortified from the end of the turn"
+unit.hold_queued: "Hold ordered: the unit holds its hex when you end the turn"
 newgame.confirm: "Press New game again to abandon this game and start over."
 newgame.delete_failed: "The old saved game could not be removed; it will be replaced after your next turn."
 save.unreadable: "Your saved game could not be loaded ({0}). A new game has started."
@@ -488,3 +493,16 @@ site.build_swamp: "Drain the swamp with {0}: {1}, {2}"
 site.building_swamp: "Being drained by {0}: {1} left"
 site.stop_swamp: "Stop draining (the money spent is lost)"
 site.built_swamp: "Drained on {0}"
+
+# Timeline screen (#955).
+timeline.title: "Your course and the record"
+timeline.yours: "Your course"
+timeline.record: "The record"
+timeline.no_record: "No single recorded answer"
+timeline.rejoined: "Rejoined the record"
+nav.timeline: "Timeline"
+
+# Q-ALT-7: after the choice only; GDD195 identifies design assumptions.
+timeline.alt_proposed: "Not adopted. Proposed by {0}, {1}."
+timeline.alt_debated: "Not adopted. Debated by {0}, {1}."
+timeline.alt_design: "Design assumption."

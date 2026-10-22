@@ -62,6 +62,7 @@ public class DesignValuesTests
         ("rules.yaml", "attention_cost.unit_order"),     // R-ORDER-001, #746 (D-A6)
         ("rules.yaml", "mvp.delegation_loyalty_floor"),   // R-EVT-003, #107
         ("rules.yaml", "mvp.disloyal_effect_share"),
+        ("rules.yaml", "mvp.enemy_attack_ratio_percent"),   // R-ENEMY-003, #749 (Q-ENEMY-2)
         // Q-START-1 (owner, 15 October 2026, #375): no city has a sourced housing stock or job count, so every city's
         // housing is its start people and its job slots its start employed; seven towns with no CBS working share take
         // the national one. The census people and the five CBS shares are sourced, not design values (R-CITY-006).
@@ -169,10 +170,11 @@ public class DesignValuesTests
         ("unit_types.yaml", "types[arab_liberation_army].movement_points"),   // #743, owner, 20 October 2026
         // The national Arms pool (Phase 2 PR 3b; #781, owner 18 October 2026: "Approve as drafted").
         ("rules.yaml", "attention_cost.buy_arms"),
+        ("rules.yaml", "attention_cost.resolve_capture"),   // #797 (Q-TECH-3): proposed, for owner override
         ("rules.yaml", "mvp.arms_start"),
         ("rules.yaml", "mvp.arms_price"),
         ("rules.yaml", "mvp.arms_per_recruit_group"),
-        // Prisoners (Phase 5 PR 12, #751; Q-POW-2, Q-POW-4, Q-POW-5): agent defaults for the owner to set or accept.
+        // Prisoners (Phase 5 PR 12, #751; Q-POW-2, Q-POW-4, Q-POW-5): agent defaults, accepted by the owner as design values (owner, 21 October 2026, #751).
         ("rules.yaml", "mvp.food_per_prisoner_unit"),
         ("rules.yaml", "mvp.prisoner_shortfall_cohesion"),
         ("rules.yaml", "mvp.points_per_prisoner_unit_returned"),
@@ -281,7 +283,7 @@ public class DesignValuesTests
         Assert.Equal((5, 0.5), (m.DelegationLoyaltyFloor, m.DisloyalEffectShare));   // R-EVT-003, #107 (D-H1)
         Assert.Equal((12, 1.0, 1, 1.0), (m.ArmsStart, m.ArmsPrice, m.ArmsPerRecruitGroup, c.Rules.AttentionCost["buy_arms"]));   // #781 (D-G6)
         Assert.Equal((1, 5, 6), (m.ArmsPerAttack, m.CombatTable.Count, m.CombatTable[0].AttackerLoss.Count));   // #747 (D-G6, D-G3), accepted by the owner 20 Oct 2026
-        Assert.Equal((1, 0.01, 10, 0.005), (m.FoodPerPrisonerUnit, m.PrisonerShortfallCohesion, m.PointsPerPrisonerUnitReturned, m.HeldSoldierCostPerTurn));   // #751 (Q-POW-2, Q-POW-4, Q-POW-5), agent defaults
+        Assert.Equal((1, 0.01, 10, 0.005), (m.FoodPerPrisonerUnit, m.PrisonerShortfallCohesion, m.PointsPerPrisonerUnitReturned, m.HeldSoldierCostPerTurn));   // #751 (Q-POW-2, Q-POW-4, Q-POW-5), accepted by the owner (owner, 21 October 2026, #751)
         Assert.Equal(12, c.Cities.Count);
         foreach (var x in c.Cities)   // the listed housing and job values are the ones Cities.Init starts from
             Assert.Equal(((int)x.Housing!.Value, (int)x.Jobs!.Value), (x.HousingCapacity, x.JobSlots));

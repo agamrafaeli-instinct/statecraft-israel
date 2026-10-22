@@ -13,9 +13,10 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-/// <summary>GDD Phase 5 PR 15, slice 1 (#754): the unit card's Move order. The card offers Move only when the sim's
+/// <summary>GDD Phase 5 PR 15 (#754): the unit card's orders. Slice 1, Move: the card offers Move only when the sim's
 /// Movement.Reachable has a hex for the unit; pressing it lights exactly those hexes on the map, a click on one queues the
-/// sim's Move through SimBridge, and a click anywhere else ends the pick and selects as before.</summary>
+/// sim's Move through SimBridge, and a click anywhere else ends the pick and selects as before. Slice 2, Fortify and Hold:
+/// each shows only where the sim's Orders.Check takes it, else the sim's reason, and a press queues the sim's UnitOrder.</summary>
 public class UnitOrdersTests
 {
     static readonly Content C = ContentLoader.Load(Paths.Content);
@@ -45,7 +46,7 @@ public class UnitOrdersTests
         var id = C.StartingForces.ToList().FindIndex(f => f.Row == "golani");
         Assert.GreaterOrEqual(id, 0, "precondition: Golani is a starting force");
         Assert.AreEqual(id, UnitCard.SimUnit(C, s, golani));
-        Assert.IsNull(UnitCard.SimUnit(C, s, Units.Single(u => u.Id == "etzioni")), "Etzioni has no starting force (#1205)");
+        Assert.IsNull(UnitCard.SimUnit(C, s, Units.Single(u => u.Id == "yiftach")), "Yiftach has no starting force (its window does not cover the start, #1241)");
         s.Units.Remove(id);
         Assert.IsNull(UnitCard.SimUnit(C, s, golani), "a unit no longer in the state");
         Assert.IsNull(UnitCard.SimUnit(SimBridgeGddTests.Legacy, s, golani), "the legacy loop has no starting forces");
@@ -159,6 +160,80 @@ public class UnitOrdersTests
         finally { Object.DestroyImmediate(map.gameObject); }
     }
 
+    /// <summary>Slice 2 (#754): for every unit with a sim unit, Israel's and the enemy's, the card shows Fortify and Hold each
+    /// only where the sim's Orders.Check takes it, and where it does not, on Israel's units the sim's reason, whatever it is
+    /// (so a refusal the sim adds later, such as artillery's hold, shows with no change here); an enemy's card gives no reason
+    /// (the sim's "not yours" is in English and says nothing the card does not). A unit already holding has no Hold, with the
+    /// sim's reason; once the game is over neither shows.</summary>
+    [Test]
+    public void TheCardOffersFortifyAndHoldOnlyWhereTheSimTakesThem()
+    {
+        using var ui = new UiTestKit();
+        var g = GameSession.New(C, GoldenRun.Seed, Mode.Historical);
+        var bridge = new SimBridge(g, Text);
+        PlacedToken? shown = null;
+        var info = new InfoPanelPresenter(ui.Root, bridge, Text, new Dictionary<string, string>(), selectedUnit: () => shown);
+        var buttons = new[] { (Orders.Fortify, ui.Q<Button>("info-fortify")), (Orders.Hold, ui.Q<Button>("info-hold")) };
+        var tokens = UnitRoster.FromState(Units, C, g.State, _ => true, (row, a, q, r) => a).Where(t => UnitCard.SimUnit(C, g.State, t.Unit) != null).ToList();
+        Assert.IsTrue(tokens.Any(t => t.Unit.Side == UnitData.Israel) && tokens.Any(t => t.Unit.Side != UnitData.Israel), "precondition: both sides");
+        void Expect(UnitToken token, string at)
+        {
+            shown = new PlacedToken(token, new AnchorSpot(0, 0, 0, 0, false));
+            info.ShowUnit();
+            var id = UnitCard.SimUnit(C, bridge.State, token.Unit)!.Value;
+            foreach (var (order, button) in buttons)
+            {
+                var why = Orders.Check(C, bridge.State, id, order);
+                Assert.AreEqual(why == null ? DisplayStyle.Flex : DisplayStyle.None, button.style.display.value, $"{at} {token.Unit.Id}: {order} ({why})");
+                if (why == null) continue;
+                if (token.Unit.Side == UnitData.Israel) StringAssert.Contains(why, ui.Q<Label>("info-reason").text, $"{at} {token.Unit.Id}: the sim's reason");
+                else StringAssert.DoesNotContain(why, ui.Q<Label>("info-reason").text, $"{at} {token.Unit.Id}: no reason on an enemy's card");
+            }
+        }
+        foreach (var token in tokens) Expect(token, "start");
+        Assert.AreEqual(("Fortify", "Hold"), (buttons[0].Item2.text, buttons[1].Item2.text), "Q-UI-2's approved names");
+        var golani = tokens.Single(t => t.Unit.Id == "golani");
+        var id0 = UnitCard.SimUnit(C, g.State, golani.Unit)!.Value;
+        Assert.IsNull(bridge.Queue(new UnitOrder(id0, Orders.Hold)));
+        bridge.EndTurn();
+        Assert.IsNotNull(Orders.Check(C, bridge.State, id0, Orders.Hold), "precondition: Golani holds");
+        Expect(golani, "holding");
+        Assert.IsTrue(Shown(buttons[0].Item2), "a holding unit can still fortify");
+        bridge.State.GameOver = GameOverCodes.MvpEnded;
+        info.ShowUnit();
+        Assert.IsFalse(buttons.Any(b => Shown(b.Item2)), "no orders once the game is over");
+        info.Dispose();
+    }
+
+    /// <summary>Fortify queues the sim's UnitOrder(unit, fortify) through SimBridge and the card says when it is set; Hold
+    /// then replaces it (one standing order per unit) and the card says so instead.</summary>
+    [Test]
+    public void FortifyAndHoldQueueTheSimsOrder()
+    {
+        using var ui = new UiTestKit();
+        var g = GameSession.New(C, GoldenRun.Seed, Mode.Historical);
+        var bridge = new SimBridge(g, Text);
+        var golani = UnitRoster.FromState(Units, C, g.State, _ => true, (row, a, q, r) => a).Single(t => t.Unit.Id == "golani");
+        PlacedToken? shown = new PlacedToken(golani, new AnchorSpot(0, 0, 0, 0, false));
+        var info = new InfoPanelPresenter(ui.Root, bridge, Text, new Dictionary<string, string>(), selectedUnit: () => shown);
+        var id = UnitCard.SimUnit(C, g.State, golani.Unit)!.Value;
+        info.ShowUnit();
+        string Lines() => ui.Q<Label>("info-settlements").text;
+        Assert.IsFalse(Lines().Contains(Text["unit.fortify_queued"]) || Lines().Contains(Text["unit.hold_queued"]), Lines());
+        UiTestKit.Press(ui.Q<Button>("info-fortify"));
+        var queued = bridge.Queued.OfType<UnitOrder>().Single();
+        Assert.AreEqual((id, Orders.Fortify, (int?)null, (int?)null), (queued.Unit, queued.Order, queued.Q, queued.R));
+        StringAssert.Contains(Text["unit.fortify_queued"], Lines());
+        UiTestKit.Press(ui.Q<Button>("info-hold"));
+        queued = bridge.Queued.OfType<UnitOrder>().Single();
+        Assert.AreEqual((id, Orders.Hold), (queued.Unit, queued.Order));
+        StringAssert.Contains(Text["unit.hold_queued"], Lines());
+        Assert.IsFalse(Lines().Contains(Text["unit.fortify_queued"]), Lines());
+        Assert.IsEmpty(bridge.EndTurn().Rejected, "the sim takes the order the card queued");
+        Assert.AreEqual(Orders.Hold, bridge.State.Units[id].Order);
+        info.Dispose();
+    }
+
     /// <summary>The overlay draws one band per hex given (two rings of MapBuilder.RingVertices each) and hides when given
     /// none, or only hexes off the map.</summary>
     [Test]
@@ -179,5 +254,76 @@ public class UnitOrdersTests
             Assert.IsFalse(go.GetComponent<MeshRenderer>().enabled);
         }
         finally { Object.DestroyImmediate(map.gameObject); }
+    }
+
+    /// <summary>The smoke-orders golden (slice 4): GameRoot.SmokeOrders hides turn 1's event card, gives GoldenRun.SmokeMove
+    /// through the unit card (a click on the unit, Move, a click on the lit hex), ends the turn with End Turn, and ends on the state the sim's
+    /// PlaySmokeOrders pins in the golden manifest.</summary>
+    [Test]
+    public void TheSmokeOrdersRunGivesItsMoveThroughTheCardAndEndsOnTheGolden()
+    {
+        var map = BuildMap();
+        using var ui = new UiTestKit();
+        try
+        {
+            var bridge = new SimBridge(GameSession.New(C, GoldenRun.Seed, Mode.Historical), Text);
+            using var toast = new ToastPresenter(ui.Root, bridge, Text);
+            using var hud = new HudPresenter(ui.Root, bridge, Text);   // wires End Turn
+            using var card = new EventCardPresenter(ui.Root, bridge, Text, null);
+            Assert.IsTrue(ui.Root.Q("root").ClassListContains(EventCardPresenter.OpenClass), "precondition: turn 1's card is open, as in the player");
+            var layer = UnitLayer.Create(map, Units, C.Hexes, still: true);
+            layer.Show(bridge.Content, bridge.State);
+            using var info = new InfoPanelPresenter(ui.Root, bridge, Text, new Dictionary<string, string>(),
+                selectedUnit: () => layer.Selected is string sel ? layer.Tokens.First(p => p.Token.Unit.Id == sel) : (PlacedToken?)null,
+                showReachable: map.ShowReachable);
+            var log = new List<string>();
+            var run = GameRoot.SmokeOrders(ui.Root, bridge, layer, (q, r) => GameRoot.OnHexClicked(map, layer, info, q, r), log.Add);
+            while (run.MoveNext()) { }
+            var golden = GoldenRun.PlaySmokeOrders(C);
+            Assert.AreEqual(System.FormattableString.Invariant($"SMOKE ORDERS OK {golden.Date:yyyy-MM-dd} {golden.Hash()}"), log.Last(), string.Join("\n", log));
+            var move = (Move)bridge.LastBatch.Single();
+            var expected = GoldenRun.SmokeMove(C, GameSession.New(C, GoldenRun.Seed, Mode.Historical).State);
+            Assert.AreEqual((expected.Unit, expected.Q, expected.R), (move.Unit, move.Q, move.R), "the one order End Turn sent");
+        }
+        finally { Object.DestroyImmediate(map.gameObject); }
+    }
+
+    /// <summary>A click that misses the lit hex queues no Move: the smoke-orders run fails and ends no turn.</summary>
+    [Test]
+    public void ASmokeOrdersRunWhoseMoveIsNotQueuedFails()
+    {
+        var map = BuildMap();
+        using var ui = new UiTestKit();
+        try
+        {
+            var bridge = new SimBridge(GameSession.New(C, GoldenRun.Seed, Mode.Historical), Text);
+            using var hud = new HudPresenter(ui.Root, bridge, Text);
+            var layer = UnitLayer.Create(map, Units, C.Hexes, still: true);
+            layer.Show(bridge.Content, bridge.State);
+            using var info = new InfoPanelPresenter(ui.Root, bridge, Text, new Dictionary<string, string>(),
+                selectedUnit: () => layer.Selected is string sel ? layer.Tokens.First(p => p.Token.Unit.Id == sel) : (PlacedToken?)null);
+            int clicks = 0, turn = bridge.State.Turn;
+            var log = new List<string>();
+            var run = GameRoot.SmokeOrders(ui.Root, bridge, layer, (q, r) => { if (clicks++ == 0) GameRoot.OnHexClicked(map, layer, info, q, r); }, log.Add);
+            while (run.MoveNext()) { }
+            StringAssert.StartsWith("SMOKE FAIL", log.Last(), string.Join("\n", log));
+            Assert.IsFalse(log.Any(l => l.StartsWith("SMOKE ORDERS OK")));
+            Assert.AreEqual(turn, bridge.State.Turn, "no turn ended");
+        }
+        finally { Object.DestroyImmediate(map.gameObject); }
+    }
+
+    /// <summary>"smoke-orders" is its own whole flag: it starts the one-turn run and is not the "smoke" flag.</summary>
+    [Test]
+    public void SmokeOrdersIsItsOwnFlag()
+    {
+        var none = new string[0];
+        Assert.IsTrue(GameRoot.SmokeOrdersRequested("http://localhost/?smoke-orders", none, true));
+        Assert.IsTrue(GameRoot.SmokeOrdersRequested("http://localhost/?golden&smoke-orders", none, true));
+        Assert.IsFalse(GameRoot.SmokeOrdersRequested("http://localhost/?smoke-orders-x", none, true));
+        Assert.IsFalse(GameRoot.SmokeOrdersRequested("http://localhost/?smoke=5", none, true));
+        Assert.AreEqual(0, GameRoot.SmokeTurns("http://localhost/?smoke-orders", none, true), "not the smoke flag");
+        Assert.IsTrue(GameRoot.SmokeOrdersRequested(null, new[] { "Statecraft", "-smoke-orders" }, false));
+        Assert.IsFalse(GameRoot.SmokeOrdersRequested("http://localhost/?smoke-orders", new[] { "Statecraft" }, false), "desktop reads only the command line");
     }
 }
