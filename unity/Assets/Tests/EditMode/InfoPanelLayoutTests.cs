@@ -149,6 +149,29 @@ public class InfoPanelLayoutTests
         Assert.IsEmpty(problems, string.Join("\n", problems));
     }
 
+    /// <summary>#40, owner decision of 22 Oct 2026 (a condition on #1135): the info panel is a ScrollView, whose rows the scroll
+    /// content container lays out, and in Hebrew they still mirror: the hex's terrain sign sits right of its facts, as on
+    /// the row-reversed panel before (#550). In English it sits left of them. At every window size and scale, Lydda's hex.</summary>
+    [UnityTest]
+    public IEnumerator InHebrewTheInfoPanelsRowsMirror([Values(100, 125, 150)] int uiScale)
+    {
+        var he = UiText.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>(UiPaths.StringsHebrew).text, "strings.he.yaml");
+        var g = WithAnEventOpen();
+        var lod = C.SettlementHexes.Single(s => s.Id == "lod");
+        var problems = new List<string>();
+        foreach (var hebrew in new[] { false, true })
+            foreach (var (w, h) in Windows)
+                yield return Rendered(w, h, g, (root, info) => info.Show(lod.Q, lod.R), root =>
+                {
+                    var at = $"{(hebrew ? "he" : "en")} {w}x{h} at {uiScale}%";
+                    var thumb = root.Q("info-thumb").worldBound; var body = root.Q(className: "info-body").worldBound;
+                    if (!(thumb.width > 0) || !(body.width > 0)) { problems.Add($"{at}: precondition: the sign {thumb} and the facts {body} show"); return; }
+                    if (hebrew ? !(thumb.xMin >= body.xMax - 0.5f) : !(thumb.xMax <= body.xMin + 0.5f))
+                        problems.Add($"{at}: the sign {thumb} is not {(hebrew ? "right" : "left")} of the facts {body}");
+                }, text: hebrew ? he : null, hebrew: hebrew, uiScale: uiScale);
+        Assert.IsEmpty(problems, string.Join("\n", problems));
+    }
+
     /// <summary>GDD Phase 1 PR 8 (#381): the city panel with two training cohorts (a Cancel each) and the
     /// designated site's panel (two idle halutz groups, so two Build buttons), and a hex one city can build a city project on
     /// (#1122; the city also with the ma'abarot policy, so every project kind is a button), at every window size in English and Hebrew:

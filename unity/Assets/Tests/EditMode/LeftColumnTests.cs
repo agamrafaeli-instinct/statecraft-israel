@@ -170,6 +170,30 @@ public class LeftColumnTests
         Assert.IsEmpty(problems, string.Join("\n", problems));
     }
 
+    /// <summary>#40, owner decision of 22 Oct 2026 (phones at 100% take the tight HUD, on #1135): on a phone held upright the
+    /// HUD is tight and three-row, and an open screen takes the window (the mobile-modal pattern), however far the bar's
+    /// rows grew: it starts at the window's top inset, over the bar, not part-way down it, and lies in the window, in
+    /// English and Hebrew.</summary>
+    [UnityTest]
+    public IEnumerator OnAPhoneAScreenTakesTheWindow()
+    {
+        var problems = new List<string>();
+        var g = WithAnEventOpen();
+        foreach (var hebrew in new[] { false, true })
+            foreach (var (w, h) in new[] { (390, 844), (360, 800), (375, 667) })
+                yield return Rendered(w, h, hebrew, g, (root, nav) =>
+                {
+                    string at = $"{(hebrew ? "he" : "en")} {w}x{h}";
+                    var hud = root.Q("root");
+                    if (!hud.ClassListContains(HudPresenter.TightClass) || !hud.ClassListContains(HudPresenter.ThreeRowClass)) problems.Add($"{at}: precondition: the tight three-row HUD");
+                    var window = root.worldBound; var screen = root.Q("screen-cabinet").worldBound;
+                    if (!(screen.width > 0)) { problems.Add($"{at}: precondition: the Cabinet shows"); return; }
+                    if (screen.yMin > window.yMin + 12f)   // its 8 px inset, give or take the panel's scaling problems.Add($"{at}: the screen {screen} starts {screen.yMin - window.yMin:0} px down, not at the window's top");
+                    if (screen.xMin < window.xMin - 0.5f || screen.xMax > window.xMax + 0.5f || screen.yMax > window.yMax + 0.5f) problems.Add($"{at}: the screen {screen} leaves the window {window}");
+                }, (root, nav) => nav.Toggle("cabinet"));
+        Assert.IsEmpty(problems, string.Join("\n", problems));
+    }
+
     /// <summary>Review of #859 at fb2a8dc (WebGL) and the owner's ruling there (17 October 2026): on a phone held upright,
     /// 390x844, 360x800 and 375x667, with a photo card open (turn 0's One Army and turn 1's The First Truce, taller than
     /// WithAnEventOpen's card, which the test above uses), no rail button sits under the card, Why? and Settings included

@@ -1048,6 +1048,9 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
    calc(). Content taller than the cap scrolls: the panel is a ScrollView now (Game.uxml), its rows laid out by the
    scroll content container. */
 .info-panel .unity-scroll-view__content-container { flex-direction: row; align-items: flex-start; }
+/* In Hebrew the rows mirror as on the row-reversed panel before (#550): the ScrollView's own row-reverse does not reach the
+   content container, which lays the rows out (owner decision on #1135, 22 Oct 2026). */
+.lang-he .info-panel .unity-scroll-view__content-container { flex-direction: row-reverse; }
 .hud-two-row .info-panel.info-gdd-shown .unity-scroll-view__content-container { flex-wrap: wrap; }
 /* The minimap shrinks with the tight three-row window (MinimapPresenter fits the picture to the box). */
 .hud-tight.hud-three-row .minimap { width: 170px; height: 288px; }

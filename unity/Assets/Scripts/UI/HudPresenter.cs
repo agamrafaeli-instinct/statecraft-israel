@@ -395,7 +395,10 @@ namespace Statecraft.Game.UI
             var fit = UnityEngine.Mathf.Abs(grown) > 0.5f;
             bar.style.height = fit ? new StyleLength(rows) : new StyleLength(StyleKeyword.Null);
             var margin = fit ? new StyleLength(grown) : new StyleLength(StyleKeyword.Null);
-            foreach (var e in underBar) e.style.marginTop = margin;
+            // On the tight three-row window a screen takes the window (Statecraft.uss, the mobile-modal pattern): the bar's
+            // growth does not move it, or it would start part-way down the bar it covers.
+            var screenTakesWindow = threeRow && hudRoot.ClassListContains(TightClass);
+            foreach (var e in underBar) e.style.marginTop = screenTakesWindow && e.ClassListContains("screen") ? new StyleLength(StyleKeyword.Null) : margin;
         }
 
         /// <summary>The height the bar's rows take: each row's tallest item (its children laid out in the flow, grouped by the
@@ -434,7 +437,9 @@ namespace Statecraft.Game.UI
             var r = root.worldBound;
             if (float.IsNaN(r.width) || r.width <= 0f) return;
             var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx;
+            var changed = tight != hudRoot.ClassListContains(TightClass);
             hudRoot.EnableInClassList(TightClass, tight);
+            if (changed) PlaceUnderBar();   // the three-row bar's base height and the screens' margin depend on the tight class
             FitInfoPanel();
         }
 
