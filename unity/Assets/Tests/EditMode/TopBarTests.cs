@@ -414,7 +414,11 @@ public class TopBarTests
                     if (!(band.height > 0) || !(scrim.height > 0) || !(gutter.height > 0)) { problems.Add($"{at}: precondition: the backdrop shows"); return; }
                     if (Mathf.Abs(band.yMin - bar.yMax) > 0.5f) problems.Add($"{at}: the band starts at {band.yMin:0}, not at the bar's bottom {bar.yMax:0}");
                     if (band.xMin > root.worldBound.xMin + 0.5f || band.xMax < root.worldBound.xMax - 0.5f) problems.Add($"{at}: the band {band} is not the window's width");
-                    if (band.yMax < scrim.yMin - 0.5f || band.yMax < gutter.yMin - 0.5f) problems.Add($"{at}: a gap between the band {band} and the backdrop {scrim} or the strip {gutter}");
+                    // On the tight three-row window (#40) the side menu is a row under the bar: the band stops at the row's top and
+                    // the strip, the window's width, takes over from there down to the backdrop.
+                    bool stripBridges = gutter.yMin <= band.yMax + 0.5f && gutter.yMax >= scrim.yMin - 0.5f
+                        && gutter.xMin <= root.worldBound.xMin + 0.5f && gutter.xMax >= root.worldBound.xMax - 0.5f;
+                    if (band.yMax < scrim.yMin - 0.5f && !stripBridges || band.yMax < gutter.yMin - 0.5f) problems.Add($"{at}: a gap between the band {band} and the backdrop {scrim} or the strip {gutter}");
                     if (band.yMax > column.yMin + 0.5f) problems.Add($"{at}: the band {band} reaches over the column's discs {column}");
                     foreach (var x in new[] { 0.1f, 0.5f, 0.9f })
                     {

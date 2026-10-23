@@ -228,7 +228,9 @@ public class LeftColumnTests
     }
 
     /// <summary>Each screen opens clear of the column at every window size (a screen under the column would hide the button
-    /// that closes it), and the toast too, in English and Hebrew.</summary>
+    /// that closes it), and the toast too, in English and Hebrew. On the tight three-row HUD (a phone held upright) a screen
+    /// takes the window instead and covers the whole side menu, its own X closing it (#40, the owner's ruling on #1135,
+    /// 22 Oct 2026; OnAPhoneAScreenTakesTheWindow).</summary>
     [UnityTest]
     public IEnumerator EveryScreenAndTheToastOpenClearOfTheColumn()
     {
@@ -248,7 +250,10 @@ public class LeftColumnTests
                     yield return Rendered(w, h, hebrew, g, (root, nav) =>
                     {
                         var r = root.Q("screen-" + screen).worldBound;
+                        var hud = root.Q("root");
+                        bool takesWindow = hud.ClassListContains(HudPresenter.TightClass) && hud.ClassListContains(HudPresenter.ThreeRowClass);
                         if (!(r.width > 0)) problems.Add($"{at}: precondition: the {screen} screen shows");
+                        else if (takesWindow) { if (!(r.Contains(Hull(root).min) && r.Contains(Hull(root).max))) problems.Add($"{at}: the {screen} screen {r} takes the window but leaves part of the column {Hull(root)} uncovered"); }
                         else if (r.Overlaps(Hull(root))) problems.Add($"{at}: the {screen} screen {r} covers the column {Hull(root)}");
                     }, (root, nav) => nav.Toggle(screen));
             }
