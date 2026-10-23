@@ -363,8 +363,8 @@ namespace Statecraft.Sim
             }
             // Objectives (GDD v0.1, Phase 1 PR 6). Read in both loops, since their cards are events every loop loads; a content
             // set without objectives has no file.
-            c.Objectives = ReadOptional<ObjectivesFile>(readFile, ObjectivesFileName)?.Objectives
-                .OrderBy(o => o.Id, StringComparer.Ordinal).ToList() ?? new List<Objective>();
+            // In the file's order, not sorted: it is the order objectives record and their cards fire in (R-OBJ-007, Q-CARD-2).
+            c.Objectives = ReadOptional<ObjectivesFile>(readFile, ObjectivesFileName)?.Objectives ?? new List<Objective>();
             Validate(c, settlementIds);
             ApplyMapOverrides(readFile, c, settlementIds);   // after the map's own checks, before the GDD records that read it
             if (c.IsGdd)
@@ -1088,6 +1088,7 @@ namespace Statecraft.Sim
             {
                 var at = $"types[{x.Id}]";
                 if (x.Kind != "population" && x.Kind != "unit") throw new ContentException(uf, at + ".kind", "must be population or unit");
+                if (x.Id == "recruit" && x.Side != "israel") throw new ContentException(uf, at + ".side", "a recruit must be an Israeli military unit (R-UNIT-003)");
                 // R-UNIT-001: a type with a side or a class is military, and needs both; the sides are units_1948.yaml's.
                 if (x.Side != "" || x.Class != "")
                 {
@@ -1120,6 +1121,7 @@ namespace Statecraft.Sim
                     // Training (R-TRAIN-001) needs a place to train; values without one would be read by nothing.
                     if (x.TrainingTurns != 0) throw new ContentException(uf, at + ".training_turns", "only a type with a facility trains");
                     if (x.TrainingCost != 0) throw new ContentException(uf, at + ".training_cost", "only a type with a facility trains");
+                    if (x.TrainingArms != null) throw new ContentException(uf, at + ".training_arms", "only a type with a facility trains");
                     continue;
                 }
                 if (!TrainingFacilities.Contains(x.Facility)) throw new ContentException(uf, at + ".facility", $"unknown facility '{x.Facility}' (military_camp, hakhshara or industry)");
@@ -1130,9 +1132,19 @@ namespace Statecraft.Sim
                 // Q-CRAFT-1 (owner, 15 October 2026): a craftsman trains in a city with a completed industry project.
                 if (x.Id == Training.Craftsman && x.Facility != Training.Industry)
                     throw new ContentException(uf, at + ".facility", "a craftsman trains at industry (Q-CRAFT-1)");
+                // R-UNIT-008 (Q-ARTY-3): a trained military type pays Arms a group; the recruit's is rules.yaml's
+                // arms_per_recruit_group (R-ARMS-003), so a second value on it would be read by nothing.
+                if (x.Side != "" && x.Id != "recruit")
+                {
+                    if (!(x.TrainingArms >= 1)) throw new ContentException(uf, at + ".training_arms", "required for a trained military type, at least 1");
+                }
+                else if (x.TrainingArms != null) throw new ContentException(uf, at + ".training_arms", "only a trained military type other than the recruit takes its own Arms");
                 if (x.TrainingTurns < 1) throw new ContentException(uf, at + ".training_turns", "must be >= 1");
                 if (!(x.TrainingCost >= 0 && IsFinite(x.TrainingCost))) throw new ContentException(uf, at + ".training_cost", "must be a finite number >= 0");
             }
+            // R-UNIT-004: promotion must not create a unit whose military type is missing or belongs to another side.
+            if (c.UnitTypes.Any(t => t.Id == "recruit") && !c.UnitTypes.Any(t => t.Id == "veteran_soldier" && t.Kind == "unit" && t.Side == "israel" && t.Class == "infantry"))
+                throw new ContentException(uf, "types[veteran_soldier]", "required as an Israeli infantry unit for recruit promotion");
             // R-CITY-003: the arrivals are spread over the cities, so there must be one to take them.
             if (c.Cities.Count == 0) throw new ContentException(cf, "cities", "the GDD loop needs at least one city to take the arrivals");
             foreach (var (file, r) in new[] { ("rules.yaml", c.Rules) }.Concat(c.EraRules.OrderBy(kv => kv.Key, StringComparer.Ordinal).Select(kv => ("rules/" + kv.Key + ".yaml", kv.Value))))
@@ -1195,6 +1207,11 @@ namespace Statecraft.Sim
                 if (!(m.ArmsPrice >= 0 && IsFinite(m.ArmsPrice.Value))) throw new ContentException(file, "mvp.arms_price", "must be a finite number >= 0");
                 if (m.ArmsPerRecruitGroup == null) throw new ContentException(file, "mvp.arms_per_recruit_group", "required when eras.yaml systems.loop is gdd");
                 if (m.ArmsPerRecruitGroup < 0) throw new ContentException(file, "mvp.arms_per_recruit_group", "must be >= 0");
+                // R-UNIT-010, R-UNIT-004: omitted values must not silently make upkeep free or promotion immediate.
+                if (m.MilitaryUpkeepPerTurn == null) throw new ContentException(file, "mvp.military_upkeep_per_turn", "required when eras.yaml systems.loop is gdd");
+                if (!(m.MilitaryUpkeepPerTurn >= 0 && IsFinite(m.MilitaryUpkeepPerTurn.Value))) throw new ContentException(file, "mvp.military_upkeep_per_turn", "must be a finite number >= 0");
+                if (m.VeteranSoldierService == null) throw new ContentException(file, "mvp.veteran_soldier_service", "required when eras.yaml systems.loop is gdd");
+                if (m.VeteranSoldierService < 1) throw new ContentException(file, "mvp.veteran_soldier_service", "must be >= 1");
                 // R-VET-001, R-VET-002: required, so a missing key is not read as 0 (a veteran after no work, or one that builds nothing).
                 foreach (var (key, v) in new[] { ("veteran_halutz_service", m.VeteranHalutzService), ("veteran_progress", m.VeteranProgress) })
                 {

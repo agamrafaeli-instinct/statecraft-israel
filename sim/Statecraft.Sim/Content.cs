@@ -584,6 +584,10 @@ namespace Statecraft.Sim
         /// <summary>The Arms one recruit group takes when its training starts (R-ARMS-003; D-G6, Q-UNIT-3, #781). Required in the
         /// GDD loop, &gt;= 0.</summary>
         public int? ArmsPerRecruitGroup { get; set; }
+        /// <summary>IL millions per Israeli military formation per turn, not per strength point (R-UNIT-010; Q-UNIT-3).</summary>
+        public double? MilitaryUpkeepPerTurn { get; set; }
+        /// <summary>Turns served as a recruit before promotion to veteran_soldier (R-UNIT-004; Q-UNIT-2).</summary>
+        public int? VeteranSoldierService { get; set; }
         /// <summary>Turns of work after which a halutz unit becomes a veteran_halutz (R-VET-001; D-D9, Q-VET-1). Required in
         /// the GDD loop, at least 1.</summary>
         public int? VeteranHalutzService { get; set; }
@@ -835,6 +839,9 @@ namespace Statecraft.Sim
         /// <summary>The Arms a unit of an artillery type spends each time it fires (R-COMBAT-007; Q-ARTY-1). Required on an
         /// artillery type, null on any other.</summary>
         public int? ArmsPerFire { get; set; }
+        /// <summary>The Arms a group of a trained military type other than the recruit takes when its training starts
+        /// (R-UNIT-008; Q-ARTY-3). The recruit's is rules.yaml mvp.arms_per_recruit_group (R-ARMS-003); null on every other type.</summary>
+        public int? TrainingArms { get; set; }
     }
 
     /// <summary>One stretch of a budget line's ownership (rules.yaml budget_owners): from this day (inclusive) the office owns the line.</summary>

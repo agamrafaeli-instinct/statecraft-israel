@@ -53,6 +53,8 @@ public class DesignValuesTests
         ("rules.yaml", "mvp.cover_months"),
         ("rules.yaml", "mvp.veteran_halutz_service"),
         ("rules.yaml", "mvp.veteran_progress"),
+        ("rules.yaml", "mvp.military_upkeep_per_turn"),
+        ("rules.yaml", "mvp.veteran_soldier_service"),
         ("rules.yaml", "mvp.housing_start_condition"),
         ("rules.yaml", "mvp.overflow_condition_loss"),
         ("rules.yaml", "mvp.defeat_turns"),
@@ -155,6 +157,7 @@ public class DesignValuesTests
         ("rules.yaml", "mvp.combat_terrain_percent.mountains"),
         ("rules.yaml", "mvp.road_move_cost"),   // R-MOVE-007, #745 (Q-MOVE-2): agent-proposed
         ("rules.yaml", "mvp.rail_move_cost"),
+        ("unit_types.yaml", "types[recruit].movement_points"),
         ("unit_types.yaml", "types[veteran_soldier].movement_points"),
         ("unit_types.yaml", "types[artillery].movement_points"),
         ("unit_types.yaml", "types[armoured_car].movement_points"),
@@ -163,6 +166,13 @@ public class DesignValuesTests
         ("unit_types.yaml", "types[artillery].arms_per_fire"),
         ("unit_types.yaml", "types[artillery].combat_percent"),
         ("unit_types.yaml", "types[armoured_car].combat_percent"),
+        // How either is acquired (part 2, R-UNIT-008; Q-ARTY-3): proposed on #748, 22 October 2026, for the owner to set or accept.
+        ("unit_types.yaml", "types[artillery].training_turns"),
+        ("unit_types.yaml", "types[artillery].training_cost"),
+        ("unit_types.yaml", "types[artillery].training_arms"),
+        ("unit_types.yaml", "types[armoured_car].training_turns"),
+        ("unit_types.yaml", "types[armoured_car].training_cost"),
+        ("unit_types.yaml", "types[armoured_car].training_arms"),
         ("unit_types.yaml", "types[egyptian_army].movement_points"),   // #743, owner, 20 October 2026
         ("unit_types.yaml", "types[arab_legion].movement_points"),   // #743, owner, 20 October 2026
         ("unit_types.yaml", "types[syrian_army].movement_points"),   // #743, owner, 20 October 2026
@@ -282,12 +292,13 @@ public class DesignValuesTests
         Assert.Equal((0.35, 0.15), (m.HousingStartCondition, m.OverflowConditionLoss));   // Q-START-3, Q-HOUSE-1 (D-D1)
         Assert.Equal((5, 0.5), (m.DelegationLoyaltyFloor, m.DisloyalEffectShare));   // R-EVT-003, #107 (D-H1)
         Assert.Equal((12, 1.0, 1, 1.0), (m.ArmsStart, m.ArmsPrice, m.ArmsPerRecruitGroup, c.Rules.AttentionCost["buy_arms"]));   // #781 (D-G6)
+        Assert.Equal((0.05, 6), (m.MilitaryUpkeepPerTurn, m.VeteranSoldierService)); // Q-GEN-1: owner-accepted initial design values (19 October 2026), not history.
         Assert.Equal((1, 5, 6), (m.ArmsPerAttack, m.CombatTable.Count, m.CombatTable[0].AttackerLoss.Count));   // #747 (D-G6, D-G3), accepted by the owner 20 Oct 2026
         Assert.Equal((1, 0.01, 10, 0.005), (m.FoodPerPrisonerUnit, m.PrisonerShortfallCohesion, m.PointsPerPrisonerUnitReturned, m.HeldSoldierCostPerTurn));   // #751 (Q-POW-2, Q-POW-4, Q-POW-5), accepted by the owner (owner, 21 October 2026, #751)
         Assert.Equal(12, c.Cities.Count);
         foreach (var x in c.Cities)   // the listed housing and job values are the ones Cities.Init starts from
             Assert.Equal(((int)x.Housing!.Value, (int)x.Jobs!.Value), (x.HousingCapacity, x.JobSlots));
-        Assert.Equal(new[] { ("recruit", 3, 0.5), ("halutz", 4, 0.5), ("craftsman", 3, 0.5) },   // the craftsman: Q-CRAFT-3
+        Assert.Equal(new[] { ("recruit", 3, 0.5), ("halutz", 4, 0.5), ("craftsman", 3, 0.5), ("artillery", 3, 1.0), ("armoured_car", 3, 1.0) },   // the craftsman: Q-CRAFT-3; the guns and the car: Q-ARTY-3 (#748)
                      c.UnitTypes.Where(t => t.Facility != "").Select(t => (t.Id, t.TrainingTurns, t.TrainingCost)));
     }
 
