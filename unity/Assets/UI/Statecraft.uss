@@ -1010,6 +1010,11 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
 .hud-tight .meter { min-width: 0; padding: 0 4px; }
 .hud-tight .meter-value { font-size: 16px; }
 .hud-tight .meter-delta { font-size: 12px; }
+/* The tight three-row bar keeps the narrow bar's values (22 px, deltas 15 px): a phone held upright at 100% is tight too,
+   and at its 0.49 scale 16 px values were 8 screen px, smaller than the floored captions above them. Its rows grow the
+   bar (PlaceUnderBar). */
+.hud-tight.hud-three-row .meter-value { font-size: 22px; }
+.hud-tight.hud-three-row .meter-delta { font-size: 15px; }
 .hud-tight.hud-narrow .right-column, .hud-tight.hud-narrow .left-column, .hud-tight.hud-narrow .event-gutter, .hud-tight.hud-narrow .event-layer, .hud-tight.hud-narrow .screen, .hud-tight.hud-narrow .toast { top: 108px; }
 .hud-tight.hud-two-row .right-column, .hud-tight.hud-two-row .left-column, .hud-tight.hud-two-row .event-gutter, .hud-tight.hud-two-row .event-layer, .hud-tight.hud-two-row .screen, .hud-tight.hud-two-row .toast { top: 184px; }
 .hud-tight.hud-three-row .right-column, .hud-tight.hud-three-row .left-column, .hud-tight.hud-three-row .event-gutter, .hud-tight.hud-three-row .event-layer, .hud-tight.hud-three-row .screen, .hud-tight.hud-three-row .toast { top: 212px; }
