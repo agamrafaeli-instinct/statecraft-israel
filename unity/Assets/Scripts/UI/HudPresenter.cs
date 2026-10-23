@@ -63,9 +63,9 @@ namespace Statecraft.Game.UI
         public const float TightThreeRowBarPx = 200f;
         /// <summary>The tight info panel's top keeps this gap below the lower of the bar and the side menu (FitInfoPanel).</summary>
         public const float TightInfoGapPx = 4f;
-        /// <summary>On the tight three-row window the info panel's right edge keeps this far from the window's: the shrunken
-        /// minimap's 170 px, its 16 px inset and a 32 px gap (FitInfoPanel).</summary>
-        public const float TightThreeRowMinimapClearPx = 218f;
+        /// <summary>On the tight three-row window the info panel's right edge keeps this far from the window's: the minimap's
+        /// 222 px (Statecraft.uss .minimap), its 16 px inset and a 32 px gap (FitInfoPanel).</summary>
+        public const float TightThreeRowMinimapClearPx = 270f;
         /// <summary>On the one-row bar, when the meters leave enough room, the bar gets RoomyClass: promo-sized icons (38 px)
         /// and values (25 px) (Statecraft.uss .top-bar--roomy). It turns on only when the measured spare room covers the
         /// predicted growth (RoomyGrowth) plus SpareShare, and off when the spare room falls below SpareShare, so it never
