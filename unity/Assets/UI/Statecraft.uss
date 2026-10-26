@@ -1026,6 +1026,13 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
    three-row height is a floor the rows can outgrow (HudPresenter.PlaceUnderBar, TightThreeRowBarPx). */
 .hud-tight.hud-narrow .top-bar { height: 96px; }
 .hud-tight.hud-two-row .top-bar { height: 172px; }
+/* The tight two-row bar's meters take 79% of it, not 78%: at 960x600 on 125% (1455 logical px) the plate, 78% and New Game
+   still fitted the first row, and End Turn wrapped alone under the plate, out of the bar (TopBarTests). At 79% New Game
+   and End Turn share the second row on every tight two-row width, 1213 to 1455 px, as on the two-row bar at 100%; at
+   80% the meters no longer fit beside the plate at 1213 px. Its rows grow it past 172 px when the text floor raises the
+   plate (HudPresenter.PlaceUnderBar, TightTwoRowBarPx). */
+.hud-tight.hud-two-row .meters { width: 79%; }
+.hud-tight.hud-three-row .meters { width: 100%; }   /* the three-row bar is two-row too: its meters keep their own row */
 .hud-tight.hud-three-row .top-bar { height: 200px; }
 .hud-tight .top-bar { padding-top: 4px; padding-bottom: 3px; }
 .hud-tight .meter { min-width: 0; padding: 0 4px; }
@@ -1049,9 +1056,12 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
    window's foot on a short window, while a row takes only one disc's height. The discs keep the phone's 60 px (the
    three-row column's above): a phone held upright at 100% is tight too, and its panel scale falls to about 0.41
    (375x667), where 60 px is still 24 screen px (LeftColumnTests). In Hebrew the row mirrors and stays at the left, as
-   the column does (#550). The panels below it start under the row (top 276 px: the row's 212, its 60 and a 4 px gap). */
-.hud-tight.hud-three-row .left-column { left: 16px; right: 208px; top: 212px; width: auto; flex-direction: row; align-items: flex-start; }
-.hud-tight.hud-three-row .left-column > .rail-button { width: 60px; height: 60px; margin: 0 4px 0 0; }
+   the column does (#550). The panels below it start under the row (top 276 px: the row's 212, its 60 and a 4 px gap).
+   The row spans the window less 8 px each side (the full-window screen's inset) and the discs stand 2 px apart (the
+   column's own gap at 100%), so the eight of them (494 px) fit the narrowest tight phone, 360x800 at 150% (517 logical
+   px wide; LeftColumnTests), with the row's left edge inside the column test's 3% of the window. */
+.hud-tight.hud-three-row .left-column { left: 8px; right: 8px; top: 212px; width: auto; flex-direction: row; align-items: flex-start; }
+.hud-tight.hud-three-row .left-column > .rail-button { width: 60px; height: 60px; margin: 0 2px 0 0; }
 .lang-he.hud-tight.hud-three-row .left-column { flex-direction: row-reverse; justify-content: flex-end; }
 .hud-tight.hud-three-row .left-column > .rail-button .nav-disc { width: 60px; height: 60px; padding: 14px; border-radius: 30px; }
 .hud-tight.hud-three-row .right-column, .hud-tight.hud-three-row .event-layer, .hud-tight.hud-three-row .toast { top: 276px; }
@@ -1078,7 +1088,8 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
 /* The info panel never rises into the bar or the side menu: on a tight window HudPresenter.FitInfoPanel caps its height
    below the lower of them (the column, or the rail row on the three-row bar), and on the tight three-row window its
    width clear of the minimap (222 px; it keeps its size there, so its 50 px buttons stay at least 24 screen px on a
-   phone held upright, MinimapReliefTests). The caps are set in code from laid-out bounds: Unity's USS has no
+   phone held upright, MinimapReliefTests), or, where that leaves the panel too narrow (a phone at 125% or 150%), it
+   stands above the minimap and its caption at the window's width. The caps are set in code from laid-out bounds: Unity's USS has no
    calc(). Content taller than the cap scrolls: the panel is a ScrollView now (Game.uxml), its rows laid out by the
    scroll content container. */
 .info-panel .unity-scroll-view__content-container { flex-direction: row; align-items: flex-start; }

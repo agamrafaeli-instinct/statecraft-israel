@@ -13,6 +13,8 @@ namespace Statecraft.Game.UI
         readonly VisualElement bar, hudRoot, nav;
         /// <summary>The info panel and the side menu, for the tight HUD's info-panel caps (FitInfoPanel, #40).</summary>
         readonly VisualElement? infoPanel, railColumn;
+        /// <summary>The minimap and its border caption, which a lifted info panel stands above (FitInfoPanel, #40).</summary>
+        readonly VisualElement? minimap, mapLayer;
         readonly System.Collections.Generic.List<VisualElement> meters;
         /// <summary>Each meter's element and its caption in the UI's language, for the words in its tooltip (#398).</summary>
         readonly System.Collections.Generic.Dictionary<string, (VisualElement element, string caption)> said =
@@ -61,13 +63,26 @@ namespace Statecraft.Game.UI
         /// only layout sizes: the small text keeps the same screen-pixel floor (SmallTextSize) in and out of it.</summary>
         public const string TightClass = "hud-tight";
         public const float TightBelowHeightPx = 1200f, TightAndBelowWidthPx = 1700f, TightBelowWidthPx = 960f;
+        /// <summary>Tight at any width below this logical height: a very wide window at 125% (2560x1080 is 1755x740 logical)
+        /// is too short for the full-size panels, though wider than TightAndBelowWidthPx. The shortest window the 100% suites
+        /// pin, 2560x1080, reads 925 px tall, so this too only applies at a scale choice.</summary>
+        public const float TightBelowAnyHeightPx = 800f;
         /// <summary>Statecraft.uss .hud-tight.hud-three-row .top-bar height: the tight three-row bar's rows.</summary>
         public const float TightThreeRowBarPx = 200f;
+        /// <summary>Statecraft.uss .hud-tight.hud-two-row .top-bar height: a floor the rows can outgrow when the text floor
+        /// raises the plate (960x600 at 125%: a 109 px plate over End Turn's 64 px row), as the three-row bar's (PlaceUnderBar).</summary>
+        public const float TightTwoRowBarPx = 172f;
         /// <summary>The tight info panel's top keeps this gap below the lower of the bar and the side menu (FitInfoPanel).</summary>
         public const float TightInfoGapPx = 4f;
         /// <summary>On the tight three-row window the info panel's right edge keeps this far from the window's: the minimap's
         /// 222 px (Statecraft.uss .minimap), its 16 px inset and a 32 px gap (FitInfoPanel).</summary>
         public const float TightThreeRowMinimapClearPx = 270f;
+        /// <summary>On the tight three-row window, when that clearance leaves the info panel narrower than this (the hex's sign
+        /// and a line of its facts; a phone at 125% or 150%, 163 to 280 px), the panel stands above the minimap and its
+        /// caption instead, as wide as the window less its insets (FitInfoPanel). Phones at 100% keep 422 px or more.</summary>
+        public const float TightInfoBesideMinPx = 360f;
+        /// <summary>The lifted info panel's gap above the minimap and its caption (FitInfoPanel).</summary>
+        public const float TightInfoAbovePx = 12f;
         /// <summary>On the one-row bar, when the meters leave enough room, the bar gets RoomyClass: promo-sized icons (38 px)
         /// and values (25 px) (Statecraft.uss .top-bar--roomy). It turns on only when the measured spare room covers the
         /// predicted growth (RoomyGrowth) plus SpareShare, and off when the spare room falls below SpareShare, so it never
@@ -173,6 +188,9 @@ namespace Statecraft.Game.UI
             railColumn = root.Q<VisualElement>(RailName);
             infoPanel?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // shown again after a screen, or resized
             railColumn?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // moved down by a grown three-row bar
+            minimap = root.Q<VisualElement>("minimap");
+            mapLayer = root.Q<VisualElement>("map-layer");
+            mapLayer?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // the border caption shown or hidden
             meters = root.Q<VisualElement>("meters").Children().ToList();
             nav = root.Q<VisualElement>("nav");
             foreach (var m in meters) m.RegisterCallback<GeometryChangedEvent>(OnMeterGeometry);
@@ -237,9 +255,11 @@ namespace Statecraft.Game.UI
             bar.UnregisterCallback<GeometryChangedEvent>(OnBarGeometry);
             hudRoot.UnregisterCallback(onRootGeometry);
             hudRoot.RemoveFromClassList(TightClass);
+            SizeTightValues();   // off the tight HUD: the values' sizes go back to the stylesheet's
             infoPanel?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
             railColumn?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
-            if (infoPanel != null) { infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; }
+            mapLayer?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
+            if (infoPanel != null) { infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null; }
             dateRow?.parent?.UnregisterCallback<GeometryChangedEvent>(OnPlateGeometry);
             foreach (var m in meters) m.UnregisterCallback<GeometryChangedEvent>(OnMeterGeometry);
             bar.RemoveFromClassList(RoomyClass);
@@ -402,14 +422,19 @@ namespace Statecraft.Game.UI
         /// it move by what it grew or shrank: a top margin (negative when it shrank), not a top, so the stylesheet's other
         /// placements (the toast at the bottom beside a wide screen) still apply. Set here, not as height: auto in the stylesheet:
         /// there Yoga sized the wrapping bar as if each quarter-width meter took a line of its own (about 1300 px). Its items'
-        /// geometry events re-run this (OnRowGeometry), and so does SetCompact.</summary>
+        /// geometry events re-run this (OnRowGeometry), and so does SetCompact. The tight two-row bar (#40) grows the same way
+        /// past its TightTwoRowBarPx when the text floor makes its rows taller, and never shrinks under it.</summary>
         void PlaceUnderBar()
         {
             // A hidden bar (the start screen) moves nothing: the start screen's toast keeps its own top (review of #859).
             var threeRow = hudRoot.ClassListContains(ThreeRowClass);
-            var basePx = threeRow && hudRoot.ClassListContains(TightClass) ? TightThreeRowBarPx : ThreeRowBarPx;
-            var rows = threeRow && bar.resolvedStyle.display != DisplayStyle.None ? RowsHeight() : 0f;
-            var grown = rows > 0f ? rows - basePx : 0f;   // NaN before layout or 0 off the three-row bar: the stylesheet's height
+            var tight = hudRoot.ClassListContains(TightClass);
+            // The tight two-row bar only grows past its floor (#40): its rows never came in shorter than its 172 px.
+            var tightTwoRow = tight && !threeRow && hudRoot.ClassListContains(TwoRowClass);
+            var basePx = threeRow ? (tight ? TightThreeRowBarPx : ThreeRowBarPx) : TightTwoRowBarPx;
+            var rows = (threeRow || tightTwoRow) && bar.resolvedStyle.display != DisplayStyle.None ? RowsHeight() : 0f;
+            if (tightTwoRow && rows < basePx) rows = 0f;
+            var grown = rows > 0f ? rows - basePx : 0f;   // NaN before layout or 0 off these bars: the stylesheet's height
             var fit = UnityEngine.Mathf.Abs(grown) > 0.5f;
             bar.style.height = fit ? new StyleLength(rows) : new StyleLength(StyleKeyword.Null);
             var margin = fit ? new StyleLength(grown) : new StyleLength(StyleKeyword.Null);
@@ -454,26 +479,53 @@ namespace Statecraft.Game.UI
         {
             var r = root.worldBound;
             if (float.IsNaN(r.width) || r.width <= 0f) return;
-            var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx;
+            var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx || r.height < TightBelowAnyHeightPx;
             var changed = tight != hudRoot.ClassListContains(TightClass);
             hudRoot.EnableInClassList(TightClass, tight);
             if (changed) PlaceUnderBar();   // the three-row bar's base height and the screens' margin depend on the tight class
+            SizeTightValues();
             FitInfoPanel();
         }
+
+        /// <summary>The tight three-row bar's values and changes (#40). Statecraft.uss gives them the narrow bar's 22 px and
+        /// 15 px, for a phone held upright at 100%, where 22 px is 9 to 11 screen px. At 125% and 150% the same phone's
+        /// quarter-width meter is narrower in panel px, and the Hebrew "IL -123.4m" no longer fit it at 360x800 (TopBarTests).
+        /// So each takes the size that keeps it at the 12 px screen floor (FlooredTextSize of the tight bar's 16 px and 12 px),
+        /// no larger than the stylesheet's: 22 px and 15 px on every phone at 100%, 17 to 21 px at 125% and 150%.</summary>
+        void SizeTightValues()
+        {
+            var p = root.panel;
+            var on = p != null && hudRoot.ClassListContains(TightClass) && hudRoot.ClassListContains(ThreeRowClass);
+            var ratio = p == null ? 0f : ScreenPxPerPanelPx(p);
+            StyleLength Size(float tightPx, float maxPx) =>
+                on ? new StyleLength(UnityEngine.Mathf.Min(maxPx, FlooredTextSize(tightPx, ratio))) : new StyleLength(StyleKeyword.Null);
+            var value = Size(TightValuePx, TightThreeRowValuePx); var delta = Size(TightDeltaPx, TightThreeRowDeltaPx);
+            foreach (var m in meters)
+            {
+                foreach (var l in m.Query<Label>(className: "meter-value").ToList()) if (l.style.fontSize != value) l.style.fontSize = value;
+                foreach (var l in m.Query<Label>(className: "meter-delta").ToList()) if (l.style.fontSize != delta) l.style.fontSize = delta;
+            }
+        }
+        // Statecraft.uss .hud-tight .meter-value / .meter-delta, and the .hud-tight.hud-three-row sizes.
+        const float TightValuePx = 16f, TightDeltaPx = 12f, TightThreeRowValuePx = 22f, TightThreeRowDeltaPx = 15f;
 
         /// <summary>The info panel's caps on a tight window (#40). They are set here from laid-out bounds because the USS
         /// importer of the pinned Unity 6000.3 has no calc() ("Unknown function calc"). The panel's top stays
         /// TightInfoGapPx below the lower of the bar and the side menu (its column, or its rail row on the three-row bar),
         /// so a bar or rail the text floor grows lowers the cap with it; on the tight three-row window its right edge also
-        /// keeps TightThreeRowMinimapClearPx from the window's right edge. Taller content scrolls (the panel is a
-        /// ScrollView). The panel is bottom-anchored, so its caps do not move its bottom or left edge, and a re-fit after
-        /// its own geometry changes settles at once. Off the tight HUD the caps are cleared.</summary>
+        /// keeps TightThreeRowMinimapClearPx from the window's right edge, or, where that leaves it narrower than
+        /// TightInfoBesideMinPx, it stands TightInfoAbovePx above the minimap and its border caption, as wide as the window
+        /// less its insets. The empty panel's hint keeps the stylesheet's place, which already clears the minimap
+        /// (.hud-three-row .info-panel.info-empty). Taller content scrolls (the panel is a ScrollView). The panel is
+        /// bottom-anchored, and its bottom is computed here from the minimap's place, not from the panel's own bound, so a
+        /// re-fit after its own geometry changes sets the same values and settles at once. Off the tight HUD the caps are
+        /// cleared.</summary>
         void FitInfoPanel()
         {
             if (infoPanel == null) return;
             if (!hudRoot.ClassListContains(TightClass))
             {
-                infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null;
+                infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null;
                 return;
             }
             if (infoPanel.resolvedStyle.display == DisplayStyle.None) return;   // hidden (a screen is open): re-fit when shown
@@ -482,13 +534,30 @@ namespace Statecraft.Game.UI
             var top = bar.resolvedStyle.display != DisplayStyle.None ? bar.worldBound.yMax : window.yMin;
             if (railColumn != null && railColumn.resolvedStyle.display != DisplayStyle.None && railColumn.worldBound.height > 0f)
                 top = UnityEngine.Mathf.Max(top, railColumn.worldBound.yMax);
-            var height = panel.yMax - top - TightInfoGapPx;
-            if (float.IsNaN(height) || !(panel.width > 0f)) return;   // not laid out yet: the geometry callbacks come back
-            infoPanel.style.maxHeight = UnityEngine.Mathf.Max(0f, height);
-            infoPanel.style.maxWidth = hudRoot.ClassListContains(ThreeRowClass)
-                ? new StyleLength(UnityEngine.Mathf.Max(0f, window.xMax - TightThreeRowMinimapClearPx - panel.xMin))
-                : new StyleLength(StyleKeyword.Null);
+            if (float.IsNaN(top) || float.IsNaN(panel.yMax) || !(panel.width > 0f)) return;   // not laid out yet: the geometry callbacks come back
+            var foot = panel.yMax;
+            var width = new StyleLength(StyleKeyword.Null);
+            var bottom = new StyleLength(StyleKeyword.Null);
+            if (hudRoot.ClassListContains(ThreeRowClass) && !infoPanel.ClassListContains("info-empty"))
+            {
+                var beside = window.xMax - TightThreeRowMinimapClearPx - panel.xMin;
+                if (beside >= TightInfoBesideMinPx || minimap == null || !(minimap.worldBound.height > 0f)) width = UnityEngine.Mathf.Max(0f, beside);
+                else
+                {
+                    var above = minimap.worldBound.yMin;
+                    if (mapLayer != null && mapLayer.resolvedStyle.display != DisplayStyle.None && mapLayer.worldBound.height > 0f)
+                        above = UnityEngine.Mathf.Min(above, mapLayer.worldBound.yMin);
+                    foot = above - TightInfoAbovePx;
+                    bottom = window.yMax - foot;
+                    width = UnityEngine.Mathf.Max(0f, window.xMax - EdgeInsetPx - panel.xMin);
+                }
+            }
+            infoPanel.style.bottom = bottom;
+            infoPanel.style.maxWidth = width;
+            infoPanel.style.maxHeight = UnityEngine.Mathf.Max(0f, foot - top - TightInfoGapPx);
         }
+        /// <summary>Statecraft.uss: the panels' inset from the window's edges (.right-column's right, .info-panel's bottom).</summary>
+        const float EdgeInsetPx = 16f;
 
         // Compact raised captions need their intrinsic group width, not the shrunken meter-body allocation.
         // Security and its level share a row; the fit-triggered two-row tier lets that group wrap.

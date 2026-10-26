@@ -91,9 +91,12 @@ public class InfoPanelLayoutTests
         var natural = l.MeasureTextSize(l.text, 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined);
         if (natural.x <= box.width + 1f) return true;
         if (l.resolvedStyle.whiteSpace != WhiteSpace.Normal) return false;
-        var wrapped = l.MeasureTextSize(l.text, box.width, VisualElement.MeasureMode.Exactly, 0, VisualElement.MeasureMode.Undefined);
-        // Text and layout round to raster pixels: at fractional panel scale one pixel can exceed one logical px.
+        // Text and layout round to raster pixels: at fractional panel scale one pixel can exceed one logical px. The layout
+        // wraps the text at its width before that rounding, so the box can come out up to a pixel narrower than the width
+        // it was wrapped at (#40: Hula's region line at 1920x1080 on 150% wraps in two lines at 264.5 px, in three at the
+        // rounded 264.0): measure at the box's width plus that pixel.
         var pixel = l.panel == null ? 1f : 1f / l.panel.scaledPixelsPerPoint;
+        var wrapped = l.MeasureTextSize(l.text, box.width + pixel, VisualElement.MeasureMode.Exactly, 0, VisualElement.MeasureMode.Undefined);
         return wrapped.y <= box.height + pixel + 0.01f;
     }
 
@@ -215,7 +218,11 @@ public class InfoPanelLayoutTests
                         if (what.StartsWith("city"))
                         {
                             var collapsed = root.Q("root").ClassListContains(HudPresenter.TwoRowClass) || panel.ClassListContains(InfoPanelPresenter.ShortClass);
-                            if (collapsed ? (w, h) == (1920, 1080) : CollapsedWindows.Contains((w, h))) problems.Add($"{at}: the city projects collapse: {collapsed}, expected {!collapsed}");
+                            // The ruling names windows at 100%. Its rule is the logical size (the stacked bars, ShortBelowPx), and
+                            // at 125%/150% 1920x1080 is 1536x864 or 1280x720 logical, shorter than 1366x657 at 100% (998), which
+                            // collapses: so 1920x1080 keeps the full list only at 100%, and the windows that collapse there
+                            // collapse at every scale (#40).
+                            if (collapsed ? uiScale == 100 && (w, h) == (1920, 1080) : CollapsedWindows.Contains((w, h))) problems.Add($"{at}: the city projects collapse: {collapsed}, expected {!collapsed}");
                             var toggle = root.Q(GddHexPanel.ToggleName); var list = root.Q(GddHexPanel.ListName);
                             if (toggle == null || list == null) problems.Add($"{at}: precondition: the city's projects have a toggle and a list");
                             else if (Shown(toggle) != collapsed || Shown(list) == collapsed) problems.Add($"{at}: toggle shown {Shown(toggle)}, list shown {Shown(list)}, collapsed {collapsed}");

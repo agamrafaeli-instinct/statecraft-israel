@@ -582,9 +582,12 @@ public class UiLayoutTests
         if (c.yMin < bar.worldBound.yMax - 0.5f) problems.Add($"{where}: the card {c} starts over the top bar {bar.worldBound}");
         var hide = root.Q("event-hide").worldBound;
         if (!Inside(hide, c)) problems.Add($"{where}: Hide {hide} is cut off by the card {c}");
-        // The header gives way before the text on every window: while a photograph shows, the body never scrolls.
+        // The header gives way before the text on every window: while a photograph shows, the body never scrolls. Layout
+        // rounds each edge to the device pixel grid, so the viewport may come out one device pixel short of its text: at a
+        // scale under 1 that is more than one panel px (1.06 at 125% on 1568x752, #40), and it is not a scroll.
         var scroll = root.Q<ScrollView>("event-scroll");
-        if (root.Q("event-photo").resolvedStyle.display == DisplayStyle.Flex && scroll.contentContainer.layout.height > scroll.contentViewport.layout.height + 1f)
+        var devicePixel = Mathf.Max(1f, 1f / root.panel.scaledPixelsPerPoint) + 0.01f;
+        if (root.Q("event-photo").resolvedStyle.display == DisplayStyle.Flex && scroll.contentContainer.layout.height > scroll.contentViewport.layout.height + devicePixel)
             problems.Add($"{where}: the body scrolls ({scroll.contentContainer.layout.height:0} px of text in {scroll.contentViewport.layout.height:0} px) while the photograph shows");
         var band = root.Q("event-photo");
         // The layer's padding is reserved space, so only its content rectangle can leave room for a full header.
