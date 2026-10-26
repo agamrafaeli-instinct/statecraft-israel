@@ -537,7 +537,7 @@ namespace Statecraft.Game.UI
             if (infoPanel == null) return;
             if (!hudRoot.ClassListContains(TightClass))
             {
-                infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null;
+                infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = HintChipCap(); infoPanel.style.bottom = StyleKeyword.Null;
                 return;
             }
             if (infoPanel.resolvedStyle.display == DisplayStyle.None) return;   // hidden (a screen is open): re-fit when shown
@@ -572,9 +572,24 @@ namespace Statecraft.Game.UI
                 }
             }
             infoPanel.style.bottom = bottom;
-            infoPanel.style.maxWidth = width;
+            infoPanel.style.maxWidth = width.keyword == StyleKeyword.Null ? HintChipCap() : width;
             infoPanel.style.maxHeight = UnityEngine.Mathf.Max(0f, foot - top - TightInfoGapPx);
         }
+        /// <summary>The hint chip on the one-row bar (info-empty) hugs its text, and a long hint reached under the right column:
+        /// the Hebrew hint at 1280x1024 ran 16 px under the border layer's label (ControlTests). Capped, it wraps instead
+        /// (Statecraft.uss .info-empty #info-title), ending HintRightClearPx from the window's right edge, as the two-row
+        /// rule's right does. A chip that already fits keeps its width; the two- and three-row chips keep their stylesheet
+        /// left and right.</summary>
+        StyleLength HintChipCap()
+        {
+            var window = hudRoot.worldBound.width;
+            if (hudRoot.ClassListContains(TwoRowClass) || hudRoot.ClassListContains(ThreeRowClass) || !infoPanel!.ClassListContains("info-empty")
+                || !(window > 0f) || float.IsNaN(infoPanel.resolvedStyle.left)) return new StyleLength(StyleKeyword.Null);
+            return UnityEngine.Mathf.Max(0f, window - HintRightClearPx - infoPanel.resolvedStyle.left);
+        }
+        /// <summary>Statecraft.uss .hud-two-row .info-panel.info-empty right: the right column's 16 px and 480 px and a 12 px gap.</summary>
+        const float HintRightClearPx = 508f;
+
         /// <summary>Statecraft.uss: the panels' inset from the window's edges (.right-column's right, .info-panel's bottom).</summary>
         const float EdgeInsetPx = 16f;
 

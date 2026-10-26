@@ -346,6 +346,11 @@ public class ControlTests
                 var bridge = new SimBridge(GameSession.New(c, GoldenRun.Seed, Mode.Historical), lang);
                 var hud = new HudPresenter(root, bridge, lang);
                 var card = new EventCardPresenter(root, bridge, lang, null, null);
+                // The info panel as the game draws it before a hex is chosen: the hint chip (its presenter, as
+                // ArmisticeTests.TheLongestMapLabelFitsBesideTheEventCard). The bare UXML is no game state: every order button
+                // and the GDD column shown at once squeeze the text column to 0 px, and a later layout pass can stack the order
+                // row over 1300 px tall, so the panel's height depended on how many passes ran before the check.
+                var info = new InfoPanelPresenter(root, bridge, lang, new Dictionary<string, string>());
                 try
                 {
                     var g = GameSession.New(c, GoldenRun.Seed, Mode.Historical);
@@ -373,7 +378,7 @@ public class ControlTests
                     // the approved legend alone is about three lines in the 312 px box; with its caption, at most six
                     Assert.LessOrEqual(size.y, 6 * label.resolvedStyle.fontSize * 1.4f, $"{at}: the label takes more than six lines ({size.y} px)");
                 }
-                finally { card.Dispose(); hud.Dispose(); Object.DestroyImmediate(go); Object.DestroyImmediate(ps); rt.Release(); Object.DestroyImmediate(rt); }
+                finally { info.Dispose(); card.Dispose(); hud.Dispose(); Object.DestroyImmediate(go); Object.DestroyImmediate(ps); rt.Release(); Object.DestroyImmediate(rt); }
             }
         }
     }
