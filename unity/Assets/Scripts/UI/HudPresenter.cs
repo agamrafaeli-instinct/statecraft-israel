@@ -63,10 +63,6 @@ namespace Statecraft.Game.UI
         /// only layout sizes: the small text keeps the same screen-pixel floor (SmallTextSize) in and out of it.</summary>
         public const string TightClass = "hud-tight";
         public const float TightBelowHeightPx = 1200f, TightAndBelowWidthPx = 1700f, TightBelowWidthPx = 960f;
-        /// <summary>Tight at any width below this logical height: a very wide window at 125% (2560x1080 is 1755x740 logical)
-        /// is too short for the full-size panels, though wider than TightAndBelowWidthPx. The shortest window the 100% suites
-        /// pin, 2560x1080, reads 925 px tall, so this too only applies at a scale choice.</summary>
-        public const float TightBelowAnyHeightPx = 800f;
         /// <summary>Statecraft.uss .hud-tight.hud-three-row .top-bar height: the tight three-row bar's rows.</summary>
         public const float TightThreeRowBarPx = 200f;
         /// <summary>Statecraft.uss .hud-tight.hud-two-row .top-bar height: a floor the rows can outgrow when the text floor
@@ -479,7 +475,7 @@ namespace Statecraft.Game.UI
         {
             var r = root.worldBound;
             if (float.IsNaN(r.width) || r.width <= 0f) return;
-            var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx || r.height < TightBelowAnyHeightPx;
+            var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx;
             var changed = tight != hudRoot.ClassListContains(TightClass);
             hudRoot.EnableInClassList(TightClass, tight);
             if (changed) PlaceUnderBar();   // the three-row bar's base height and the screens' margin depend on the tight class
@@ -518,20 +514,24 @@ namespace Statecraft.Game.UI
         /// less its insets. The empty panel's hint keeps the stylesheet's place, which already clears the minimap
         /// (.hud-three-row .info-panel.info-empty). Taller content scrolls (the panel is a ScrollView). The panel is
         /// bottom-anchored, and its bottom is computed here from the minimap's place, not from the panel's own bound, so a
-        /// re-fit after its own geometry changes sets the same values and settles at once. Off the tight HUD the caps are
-        /// cleared.</summary>
+        /// re-fit after its own geometry changes sets the same values and settles at once. Off the tight HUD only the bar
+        /// caps it (TightInfoGapPx below the bar): 2560x1080 at 125% is 1755x740 logical, wider than the tight bounds and
+        /// too short for a city's panel, which rose above the window; where the panel fits, as on every window at 100%, the
+        /// cap does not bind.</summary>
         void FitInfoPanel()
         {
             if (infoPanel == null) return;
-            if (!hudRoot.ClassListContains(TightClass))
-            {
-                infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null;
-                return;
-            }
             if (infoPanel.resolvedStyle.display == DisplayStyle.None) return;   // hidden (a screen is open): re-fit when shown
             var panel = infoPanel.worldBound;
             var window = hudRoot.worldBound;
             var top = bar.resolvedStyle.display != DisplayStyle.None ? bar.worldBound.yMax : window.yMin;
+            if (!hudRoot.ClassListContains(TightClass))
+            {
+                infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null;
+                infoPanel.style.maxHeight = float.IsNaN(top) || float.IsNaN(panel.yMax) || !(panel.width > 0f)
+                    ? new StyleLength(StyleKeyword.Null) : new StyleLength(UnityEngine.Mathf.Max(0f, panel.yMax - top - TightInfoGapPx));
+                return;
+            }
             if (railColumn != null && railColumn.resolvedStyle.display != DisplayStyle.None && railColumn.worldBound.height > 0f)
                 top = UnityEngine.Mathf.Max(top, railColumn.worldBound.yMax);
             if (float.IsNaN(top) || float.IsNaN(panel.yMax) || !(panel.width > 0f)) return;   // not laid out yet: the geometry callbacks come back
