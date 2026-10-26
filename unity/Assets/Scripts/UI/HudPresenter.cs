@@ -13,8 +13,9 @@ namespace Statecraft.Game.UI
         readonly VisualElement bar, hudRoot, nav;
         /// <summary>The info panel and the side menu, for the tight HUD's info-panel caps (FitInfoPanel, #40).</summary>
         readonly VisualElement? infoPanel, railColumn;
-        /// <summary>The minimap and its border caption, which a lifted info panel stands above (FitInfoPanel, #40).</summary>
-        readonly VisualElement? minimap, mapLayer;
+        /// <summary>The minimap and its border caption, which a lifted info panel stands above, and "Decision waiting" and the
+        /// toast at the top of the right column, which it stays under (FitInfoPanel, #40).</summary>
+        readonly VisualElement? minimap, mapLayer, decisionWaiting, captureWaiting, toast;
         readonly System.Collections.Generic.List<VisualElement> meters;
         /// <summary>Each meter's element and its caption in the UI's language, for the words in its tooltip (#398).</summary>
         readonly System.Collections.Generic.Dictionary<string, (VisualElement element, string caption)> said =
@@ -195,6 +196,9 @@ namespace Statecraft.Game.UI
             mapLayer = root.Q<VisualElement>("map-layer");
             mapLayer?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // the border caption shown or hidden
             minimap?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // moved with the right column
+            decisionWaiting = root.Q<VisualElement>("event-reopen"); captureWaiting = root.Q<VisualElement>("capture-reopen");
+            toast = root.Q<VisualElement>("toast");
+            foreach (var e in new[] { decisionWaiting, captureWaiting, toast }) e?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // shown or hidden
             meters = root.Q<VisualElement>("meters").Children().ToList();
             nav = root.Q<VisualElement>("nav");
             foreach (var m in meters) m.RegisterCallback<GeometryChangedEvent>(OnMeterGeometry);
@@ -264,6 +268,7 @@ namespace Statecraft.Game.UI
             railColumn?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
             mapLayer?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
             minimap?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
+            foreach (var e in new[] { decisionWaiting, captureWaiting, toast }) e?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
             if (infoPanel != null) { infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null; }
             dateRow?.parent?.UnregisterCallback<GeometryChangedEvent>(OnPlateGeometry);
             foreach (var m in meters) m.UnregisterCallback<GeometryChangedEvent>(OnMeterGeometry);
@@ -559,6 +564,10 @@ namespace Statecraft.Game.UI
                         above = UnityEngine.Mathf.Min(above, mapLayer.worldBound.yMin);
                     foot = above - TightInfoAbovePx;
                     bottom = window.yMax - foot;
+                    // At the window's width it reaches under the right column's top: it stays under "Decision waiting" and
+                    // the toast while they show, as the advisor sheet does (AdvisorLayout).
+                    foreach (var e in new[] { decisionWaiting, captureWaiting, toast })
+                        if (e != null && e.resolvedStyle.display != DisplayStyle.None && e.worldBound.height > 0f) top = UnityEngine.Mathf.Max(top, e.worldBound.yMax);
                     width = UnityEngine.Mathf.Max(0f, window.xMax - EdgeInsetPx - left);
                 }
             }
