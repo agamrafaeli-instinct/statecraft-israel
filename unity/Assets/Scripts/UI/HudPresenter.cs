@@ -63,6 +63,13 @@ namespace Statecraft.Game.UI
         /// only layout sizes: the small text keeps the same screen-pixel floor (SmallTextSize) in and out of it.</summary>
         public const string TightClass = "hud-tight";
         public const float TightBelowHeightPx = 1200f, TightAndBelowWidthPx = 1700f, TightBelowWidthPx = 960f;
+        /// <summary>Also tight below this logical height at a scale choice, at any width: 2560x1080 at 125% is 1755x740
+        /// logical, wider than TightAndBelowWidthPx and too short for a city's info panel, which rose above the window.
+        /// Some windows at 100% are as short (5120x1440 is 2560x720 logical, 1280x420 is 2424x795), so this applies only
+        /// at a scale choice: the panel scales by the plain mean of its two ratios to the reference resolution (match
+        /// 0.5), so at 100% every window's logical width / 1920 + height / 1080 is exactly 2, and at 125% it is 1.6, at
+        /// 150% 1.33 (Settings sets the reference resolution to 1920x1080 / the scale).</summary>
+        public const float TightScaledBelowHeightPx = 800f;
         /// <summary>Statecraft.uss .hud-tight.hud-three-row .top-bar height: the tight three-row bar's rows.</summary>
         public const float TightThreeRowBarPx = 200f;
         /// <summary>Statecraft.uss .hud-tight.hud-two-row .top-bar height: a floor the rows can outgrow when the text floor
@@ -187,6 +194,7 @@ namespace Statecraft.Game.UI
             minimap = root.Q<VisualElement>("minimap");
             mapLayer = root.Q<VisualElement>("map-layer");
             mapLayer?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // the border caption shown or hidden
+            minimap?.RegisterCallback<GeometryChangedEvent>(OnCapGeometry);   // moved with the right column
             meters = root.Q<VisualElement>("meters").Children().ToList();
             nav = root.Q<VisualElement>("nav");
             foreach (var m in meters) m.RegisterCallback<GeometryChangedEvent>(OnMeterGeometry);
@@ -255,6 +263,7 @@ namespace Statecraft.Game.UI
             infoPanel?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
             railColumn?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
             mapLayer?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
+            minimap?.UnregisterCallback<GeometryChangedEvent>(OnCapGeometry);
             if (infoPanel != null) { infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null; }
             dateRow?.parent?.UnregisterCallback<GeometryChangedEvent>(OnPlateGeometry);
             foreach (var m in meters) m.UnregisterCallback<GeometryChangedEvent>(OnMeterGeometry);
@@ -475,7 +484,9 @@ namespace Statecraft.Game.UI
         {
             var r = root.worldBound;
             if (float.IsNaN(r.width) || r.width <= 0f) return;
-            var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx;
+            var scaled = r.width / 1920f + r.height / 1080f < 1.9f;   // see TightScaledBelowHeightPx
+            var tight = r.height < TightBelowHeightPx && r.width < TightAndBelowWidthPx || r.width < TightBelowWidthPx
+                        || scaled && r.height < TightScaledBelowHeightPx;
             var changed = tight != hudRoot.ClassListContains(TightClass);
             hudRoot.EnableInClassList(TightClass, tight);
             if (changed) PlaceUnderBar();   // the three-row bar's base height and the screens' margin depend on the tight class
@@ -514,33 +525,32 @@ namespace Statecraft.Game.UI
         /// less its insets. The empty panel's hint keeps the stylesheet's place, which already clears the minimap
         /// (.hud-three-row .info-panel.info-empty). Taller content scrolls (the panel is a ScrollView). The panel is
         /// bottom-anchored, and its bottom is computed here from the minimap's place, not from the panel's own bound, so a
-        /// re-fit after its own geometry changes sets the same values and settles at once. Off the tight HUD only the bar
-        /// caps it (TightInfoGapPx below the bar): 2560x1080 at 125% is 1755x740 logical, wider than the tight bounds and
-        /// too short for a city's panel, which rose above the window; where the panel fits, as on every window at 100%, the
-        /// cap does not bind.</summary>
+        /// re-fit after its own geometry changes sets the same values and settles at once. Off the tight HUD the caps are
+        /// cleared.</summary>
         void FitInfoPanel()
         {
             if (infoPanel == null) return;
+            if (!hudRoot.ClassListContains(TightClass))
+            {
+                infoPanel.style.maxHeight = StyleKeyword.Null; infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null;
+                return;
+            }
             if (infoPanel.resolvedStyle.display == DisplayStyle.None) return;   // hidden (a screen is open): re-fit when shown
             var panel = infoPanel.worldBound;
             var window = hudRoot.worldBound;
             var top = bar.resolvedStyle.display != DisplayStyle.None ? bar.worldBound.yMax : window.yMin;
-            if (!hudRoot.ClassListContains(TightClass))
-            {
-                infoPanel.style.maxWidth = StyleKeyword.Null; infoPanel.style.bottom = StyleKeyword.Null;
-                infoPanel.style.maxHeight = float.IsNaN(top) || float.IsNaN(panel.yMax) || !(panel.width > 0f)
-                    ? new StyleLength(StyleKeyword.Null) : new StyleLength(UnityEngine.Mathf.Max(0f, panel.yMax - top - TightInfoGapPx));
-                return;
-            }
             if (railColumn != null && railColumn.resolvedStyle.display != DisplayStyle.None && railColumn.worldBound.height > 0f)
                 top = UnityEngine.Mathf.Max(top, railColumn.worldBound.yMax);
-            if (float.IsNaN(top) || float.IsNaN(panel.yMax) || !(panel.width > 0f)) return;   // not laid out yet: the geometry callbacks come back
+            if (float.IsNaN(top) || float.IsNaN(panel.yMax) || !(panel.width > 0f) || !(window.width > 0f)) return;   // not laid out yet: the geometry callbacks come back
             var foot = panel.yMax;
             var width = new StyleLength(StyleKeyword.Null);
             var bottom = new StyleLength(StyleKeyword.Null);
             if (hudRoot.ClassListContains(ThreeRowClass) && !infoPanel.ClassListContains("info-empty"))
             {
-                var beside = window.xMax - TightThreeRowMinimapClearPx - panel.xMin;
+                // From the panel's stylesheet left, not its laid-out edge, so a first pass before the window settles cannot
+                // decide the place.
+                var left = window.xMin + infoPanel.resolvedStyle.left;
+                var beside = window.xMax - TightThreeRowMinimapClearPx - left;
                 if (beside >= TightInfoBesideMinPx || minimap == null || !(minimap.worldBound.height > 0f)) width = UnityEngine.Mathf.Max(0f, beside);
                 else
                 {
@@ -549,7 +559,7 @@ namespace Statecraft.Game.UI
                         above = UnityEngine.Mathf.Min(above, mapLayer.worldBound.yMin);
                     foot = above - TightInfoAbovePx;
                     bottom = window.yMax - foot;
-                    width = UnityEngine.Mathf.Max(0f, window.xMax - EdgeInsetPx - panel.xMin);
+                    width = UnityEngine.Mathf.Max(0f, window.xMax - EdgeInsetPx - left);
                 }
             }
             infoPanel.style.bottom = bottom;
