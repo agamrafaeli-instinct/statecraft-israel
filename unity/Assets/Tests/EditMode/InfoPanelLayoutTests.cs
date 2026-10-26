@@ -525,7 +525,7 @@ public class InfoPanelLayoutTests
         {
             foreach (var panel in new[] { root.Q(className: "date-box"), root.Q("event-card"), root.Q("info-panel"), root.Q("minimap") })
             {
-                var frame = panel.Children().OfType<UiFrame>().Single();
+                var frame = panel.hierarchy.Children().OfType<UiFrame>().Single();   // the info panel's is on its ScrollView (#40)
                 Assert.IsTrue(frame.Filigree, $"{panel.name}{panel.GetClasses().FirstOrDefault()}: filigree");
                 Assert.AreEqual(PickingMode.Ignore, frame.pickingMode);
                 var b = panel.worldBound;
