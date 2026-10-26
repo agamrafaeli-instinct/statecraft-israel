@@ -29,7 +29,8 @@ namespace Statecraft.Game.Map.Units
         public const string SabraPioneer = "figure-c04-sabra-pioneer-v3", PioneerVeteran = "figure-c05-pioneer-veteran-v2",
             YoungRecruit = "figure-c06-young-recruit-v2", VeteranFighter = "figure-c07-veteran-fighter-v2",
             PalmachScout = "figure-c12f-palmach-scout-v2", Soldier1948 = "figure-soldier-1948-v1", ArabLegion = "figure-c08-arab-legion-v2", Irregular = "figure-c09-irregular-v2",
-            Napoleonchik = "figure-vehicle-napoleonchik-65mm-1948-v2", WillysJeep = "figure-vehicle-willys-jeep-1948-v2";
+            Napoleonchik = "figure-vehicle-napoleonchik-65mm-1948-v2", WillysJeep = "figure-vehicle-willys-jeep-1948-v2",
+            SandwichArmouredCar = "figure-vehicle-sandwich-convoy-1948-v2";
 
         /// <summary>An Israeli rifleman's figure by his headgear (the sourced <see cref="UnitEntry.Headgear"/>, or the uniform
         /// default), as Tal Heuberger's figures wear them and #507 paired them: the bush (slouch) hat is the sabra pioneer (C04), the
@@ -73,10 +74,11 @@ namespace Statecraft.Game.Map.Units
         };
 
         /// <summary>A vehicle's model by its type (<see cref="UnitVehicle"/>): the 65 mm gun is H02, the "Napoleonchik"
-        /// (owner, 17 October 2026, #756: Tal Heuberger's H02 is the gun), the jeep H03, the Willys.</summary>
+        /// (owner, 17 October 2026, #756: Tal Heuberger's H02 is the gun), the jeep H03, the Willys, the armoured car H01, the "sandwich"
+        /// armoured truck (the owner's Q-ART-2 choice, #756; #1536).</summary>
         public static readonly IReadOnlyDictionary<string, string> ByVehicle = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            [UnitData.Gun65mm] = Napoleonchik, [UnitData.Jeep] = WillysJeep,
+            [UnitData.Gun65mm] = Napoleonchik, [UnitData.Jeep] = WillysJeep, [UnitData.ArmouredCar] = SandwichArmouredCar,
         };
 
         /// <summary>The figure of an Arab force's side, or null (that side's rows stay off the map).</summary>
@@ -254,7 +256,7 @@ namespace Statecraft.Game.Map.Units
             return box;
         }
 
-        static bool ByVehicleId(string id) => id == Napoleonchik || id == WillysJeep;
+        static bool ByVehicleId(string id) => id == Napoleonchik || id == WillysJeep || id == SandwichArmouredCar;
 
         /// <summary>True when <paramref name="piece"/> shows its Collection model (and not a code-built mesh).</summary>
         public static bool Dressed(Transform piece)

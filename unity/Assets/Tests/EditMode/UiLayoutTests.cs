@@ -75,6 +75,42 @@ public class UiLayoutTests
     }
 
     static readonly Content C = ContentLoader.Load(Paths.Content);
+    static UiText He => UiText.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>(UiPaths.StringsHebrew).text, "strings.he.yaml");
+
+    /// <summary>Review Focus 3: the longer blocked End turn label, including its hourglass padding, fits at phone width in
+    /// English and Hebrew.</summary>
+    [UnityTest]
+    public IEnumerator TheBlockedEndTurnLabelFitsAtPhoneWidth()
+    {
+        foreach (var (language, text) in new[] { (UiLanguage.English, Text), (UiLanguage.Hebrew, He) })
+        {
+            var rt = new RenderTexture(390, 844, 0);
+            var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
+            ps.targetTexture = rt;
+            var go = new GameObject("BlockedEndTurnLayoutTest");
+            go.SetActive(false);
+            var doc = go.AddComponent<UIDocument>();
+            doc.panelSettings = ps;
+            doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UiPaths.GameUxml);
+            go.SetActive(true);
+            try
+            {
+                var root = doc.rootVisualElement;
+                root.Q("root").EnableInClassList(UiLanguage.HebrewClass, language == UiLanguage.Hebrew);
+                var bridge = new SimBridge(GameSession.New(C, GoldenRun.Seed, Mode.Historical), text);
+                using var hud = new HudPresenter(root, bridge, text);
+                var button = root.Q<Button>("end-turn");
+                for (int i = 0; i < 20 && !(button.resolvedStyle.width > 0); i++) yield return null;
+                for (int i = 0; i < 4; i++) yield return null;
+                Assert.AreEqual(text["hud.end_turn_needs_orders"], button.text);
+                var preferred = button.MeasureTextSize(button.text, 0, VisualElement.MeasureMode.Undefined, 0, VisualElement.MeasureMode.Undefined).x;
+                var padding = button.resolvedStyle.paddingLeft + button.resolvedStyle.paddingRight;
+                Assert.GreaterOrEqual(button.resolvedStyle.width + 0.5f, preferred + padding,
+                    $"{language}: blocked End turn text and hourglass padding fit at 390x844");
+            }
+            finally { Object.DestroyImmediate(go); Object.DestroyImmediate(ps); rt.Release(); Object.DestroyImmediate(rt); }
+        }
+    }
 
     /// <summary>Review I3: a wide screen (Cabinet, Defence) covers the info panel, so while it is open the panel is hidden:
     /// it is drawn under the screen, takes no keyboard focus (its build buttons cannot be reached with Tab), and a map
@@ -540,7 +576,7 @@ public class UiLayoutTests
         if (!Inside(c, l)) problems.Add($"{where}: the card {c} leaves the decision layer {l}");
         // Centred between the layer's paddings: on a phone held upright the layer keeps the left rail's room free at its left
         // (the owner's ruling on #859: no rail button under the card), so the card centres right of the rail.
-        float padL = layer.resolvedStyle.paddingLeft, padR = layer.resolvedStyle.paddingRight, padT = layer.resolvedStyle.paddingTop, padB = layer.resolvedStyle.paddingBottom;
+        float padL = layer.resolvedStyle.paddingLeft, padR = layer.resolvedStyle.paddingRight;
         if (Mathf.Abs((c.xMin - l.xMin - padL) - (l.xMax - padR - c.xMax)) > 1f) problems.Add($"{where}: the card {c} is not centred in the layer {l} (paddings {padL}, {padR})");
         if (c.width > CardMaxWidth + 1.5f) problems.Add($"{where}: the card is {c.width:0} px wide, over {CardMaxWidth}");
         if (c.yMin < bar.worldBound.yMax - 0.5f) problems.Add($"{where}: the card {c} starts over the top bar {bar.worldBound}");
@@ -551,10 +587,8 @@ public class UiLayoutTests
         if (root.Q("event-photo").resolvedStyle.display == DisplayStyle.Flex && scroll.contentContainer.layout.height > scroll.contentViewport.layout.height + 1f)
             problems.Add($"{where}: the body scrolls ({scroll.contentContainer.layout.height:0} px of text in {scroll.contentViewport.layout.height:0} px) while the photograph shows");
         var band = root.Q("event-photo");
-        // "As tall as the layer" is as tall as its room: the layer's bound less its paddings (the two-row layer keeps 92 px
-        // at its bottom for the taller bar, #831). A card filling that room gave the header way first; only with room to
-        // spare must a shown header keep 16:9 (#40: at 125%/150% the card fills smaller rooms this pin never measured).
-        if (band.resolvedStyle.display == DisplayStyle.Flex && c.height < l.height - padT - padB - 1f)
+        // The layer's padding is reserved space, so only its content rectangle can leave room for a full header.
+        if (band.resolvedStyle.display == DisplayStyle.Flex && card.layout.height < layer.contentRect.height - 1f)
         {
             var want = band.layout.width / EventCardPresenter.MediaAspect;
             if (Mathf.Abs(band.layout.height - want) > 2.5f) problems.Add($"{where}: the media header is {band.layout.width:0}x{band.layout.height:0}, not 16:9 ({want:0} px tall), with room to spare; {LayoutState(root)}");
