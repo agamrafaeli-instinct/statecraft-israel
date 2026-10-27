@@ -7,3 +7,5 @@
   stands above the minimap at the window's width; the Cabinet's side column slims so
   the seats list keeps its room; and the small text keeps its 12 px on-screen floor at every size. The seven layout
   suites that failed at 125%/150% now run at all three scales.
+- At 150% on short windows the Cabinet scroll shows seat cards before the house and legend; on phones at 150% the
+  half circle fits its column. Desktop half circles and the 100%/125% Cabinet order keep their existing layout.

@@ -671,16 +671,79 @@ public class PromoScreensTests
         finally { nav.Dispose(); cabinet.Dispose(); Object.DestroyImmediate(go); Object.DestroyImmediate(ps); rt.Release(); Object.DestroyImmediate(rt); }
     }
 
+    /// <summary>Red on BASE: short 150% never moves the house; phone 150% never fits its column.
+    /// Scale changes in one live panel must also restore the original order and 320x168 size.</summary>
+    [UnityTest]
+    public IEnumerator TheCabinetRestoresItsOrderAfterScaleChanges([Values(false, true)] bool hebrew)
+    {
+        var text = hebrew ? UiText.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>(UiPaths.StringsHebrew).text, "strings.he.yaml") : Text;
+        foreach (var (w, h) in new[] { (1920, 1080), (1280, 720), (390, 844), (360, 800) })
+        {
+            var rt = new RenderTexture(w, h, 0);
+            var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
+            ps.targetTexture = rt;
+            var go = new GameObject("CabinetScaleChange"); go.SetActive(false);
+            var doc = go.AddComponent<UIDocument>(); doc.panelSettings = ps;
+            doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UiPaths.GameUxml);
+            go.SetActive(true);
+            var root = doc.rootVisualElement;
+            root.Q("root").RemoveFromClassList("loading");
+            root.Q("root").EnableInClassList(UiLanguage.HebrewClass, hebrew);
+            var bridge = new SimBridge(GameSession.New(C, GoldenRun.Seed, Mode.Historical), text);
+            var hud = new HudPresenter(root, bridge, text);
+            var cabinet = new CabinetPresenter(root, bridge, text, null);
+            var nav = new ScreenNav(root);
+            var direction = hebrew ? new UiDirection(root, bridge) : null;
+            try
+            {
+                nav.Open("cabinet");
+                var house = root.Q("cabinet-house");
+                var main = root.Q("cabinet-main");
+                var list = root.Q<ScrollView>("cabinet-seats");
+                foreach (var scale in new[] { 100, 125, 150, 125, 100, 150 })
+                {
+                    ps.referenceResolution = new Vector2Int(Mathf.RoundToInt(1920f * 100f / scale), Mathf.RoundToInt(1080f * 100f / scale));
+                    for (int frame = 0; frame < 8; frame++) yield return null;
+                    var first = scale == 150 && w >= 1280;
+                    Assert.AreSame(first ? list.contentContainer : main, house.parent, $"{w}x{h} {scale}%: house parent");
+                    if (first) Assert.AreSame(house, list.contentContainer.Children().Last(), "cards precede the house");
+                    else Assert.AreSame(house, main.Children().First(), "default UXML order restored");
+                    var box = house.Q(className: "hemicycle-box");
+                    if (scale == 150 && w < 400)
+                    {
+                        Assert.Less(box.layout.width, 320f, "phone half circle really shrinks");
+                        Assert.LessOrEqual(box.layout.width, house.contentRect.width + 1.5f, "phone half circle fits its column");
+                    }
+                    else Assert.Less(Vector2.Distance(box.layout.size, HemicycleBox), 2.2f, "desktop and 100%/125% retain the pin");
+                    // Rendering and replacing the presenter must not clear the house when it shares the seat ScrollView.
+                    cabinet.Render();
+                    Assert.AreSame(house, root.Q("cabinet-house"));
+                    cabinet.Dispose();
+                    Assert.AreSame(main, house.parent, "disposing restores the house before clearing cards");
+                    cabinet = new CabinetPresenter(root, bridge, text, null);
+                    Assert.AreSame(house, root.Q("cabinet-house"), "the same house survives rebuilding the cards");
+                    Assert.Greater(list.Query<Button>(className: "seat").ToList().Count, 5);
+                }
+            }
+            finally
+            {
+                direction?.Dispose(); nav.Dispose(); cabinet.Dispose(); hud.Dispose();
+                Object.DestroyImmediate(go); Object.DestroyImmediate(ps); rt.Release(); Object.DestroyImmediate(rt);
+            }
+        }
+    }
+
     /// <summary>Both screens at the window shapes the HUD supports (16:9 at 1920x1080 and 1366x768, 16:10, 4:3, 5:4, the
     /// wide-and-short browser, square and narrower): each opens under the top bar, clear of the minimap column and the
     /// minimap (over the info panel, which it is drawn above), and nothing on it leaves it or its panel sideways; every
     /// one-line text fits its box.</summary>
     [UnityTest]
-    public IEnumerator BothScreensFitEveryWindowShape([Values(100, 125, 150)] int uiScale)   // #40: at the Settings scale choices
+    public IEnumerator BothScreensFitEveryWindowShape([Values(100, 125, 150)] int uiScale, [Values(false, true)] bool hebrew)   // #40: at the Settings scale choices
     {
+        var text = hebrew ? UiText.Parse(AssetDatabase.LoadAssetAtPath<TextAsset>(UiPaths.StringsHebrew).text, "strings.he.yaml") : Text;
         var g = GameSession.New(C, GoldenRun.Seed, Mode.Historical);
         var problems = new List<string>();
-        foreach (var (w, h) in new[] { (1920, 1080), (1366, 768), (1280, 720), (1440, 900), (1920, 1200), (1024, 768), (1280, 1024), (1531, 784), (1024, 1024), (960, 1080), (800, 1000), (960, 600), (390, 844) })
+        foreach (var (w, h) in new[] { (1920, 1080), (1366, 768), (1280, 720), (1440, 900), (1920, 1200), (1024, 768), (1280, 1024), (1531, 784), (1024, 1024), (960, 1080), (800, 1000), (960, 600), (390, 844), (360, 800), (375, 667), (2560, 1080) })
         {
             var rt = new RenderTexture(w, h, 0);
             var ps = Object.Instantiate(AssetDatabase.LoadAssetAtPath<PanelSettings>(UiPaths.Panel));
@@ -698,16 +761,18 @@ public class PromoScreensTests
             {
                 for (int i = 0; i < 20 && !(root.Q("top-bar").worldBound.width > 0); i++) yield return null;
                 root.Q("root").RemoveFromClassList("loading");
-                var bridge = new SimBridge(g, Text);
-                owned.Add(new HudPresenter(root, bridge, Text));
-                owned.Add(new CabinetPresenter(root, bridge, Text, null));
-                owned.Add(new DefencePresenter(root, bridge, Text));
+                root.Q("root").EnableInClassList(UiLanguage.HebrewClass, hebrew);
+                var bridge = new SimBridge(g, text);
+                owned.Add(new HudPresenter(root, bridge, text));
+                owned.Add(new CabinetPresenter(root, bridge, text, null));
+                owned.Add(new DefencePresenter(root, bridge, text));
+                if (hebrew) owned.Add(new UiDirection(root, bridge));
                 var nav = new ScreenNav(root); owned.Add(nav);
                 foreach (var s in new[] { "cabinet", "defence" })
                 {
                     nav.Open(s);
                     for (int i = 0; i < 6; i++) yield return null;
-                    var where = $"{w}x{h} {s}";
+                    var where = $"{w}x{h} {s} {(hebrew ? "he" : "en")} {uiScale}%";
                     var screen = root.Q("screen-" + s); var sr = screen.worldBound;
                     if (!(sr.width > 300)) { problems.Add($"{where}: the screen is {sr}"); continue; }
                     // #40: on the tight three-row HUD a screen takes the whole window (the mobile-modal pattern).
@@ -738,8 +803,21 @@ public class PromoScreensTests
                     if (s == "cabinet")
                     {
                         var hemi = root.Q("cabinet-hemicycle");
-                        if (hemi.layout.width < HemicycleBox.x - 1.5f || hemi.layout.height < HemicycleBox.y - 1.5f)   // pixel snapping at a fractional scale moves it by under 1.5 px
-                            problems.Add($"{where}: the half circle is {hemi.layout.size}, not the {HemicycleBox} the line test assumes");
+                        // Owner: only PHONES at 150% replace the 320x168 pin. In particular 1280x720 and 960x600
+                        // are desktops even when their scaled HUD enters the three-row tier.
+                        var phone150 = uiScale == 150 && (w == 390 || w == 360 || w == 375);
+                        if (phone150)
+                        {
+                            var house = root.Q("cabinet-house");
+                            if (!(hemi.layout.width > 0f) || hemi.layout.width > house.contentRect.width + 1.5f
+                                || hemi.layout.width > 320f + 1.5f || hemi.worldBound.xMin < house.worldBound.xMin - 0.5f
+                                || hemi.worldBound.xMax > house.worldBound.xMax + 0.5f)
+                                problems.Add($"{where}: the phone half circle {hemi.worldBound} does not fit its column {house.worldBound}");
+                            if (Mathf.Abs(hemi.layout.height - hemi.layout.width * 168f / 320f) > 1.5f)
+                                problems.Add($"{where}: the phone half circle lost its 320:168 proportions");
+                        }
+                        else if (Mathf.Abs(hemi.layout.width - HemicycleBox.x) > 1.5f || Mathf.Abs(hemi.layout.height - HemicycleBox.y) > 1.5f)
+                            problems.Add($"{where}: the half circle is {hemi.layout.size}, not the unchanged {HemicycleBox}");
                         var cards = root.Q<ScrollView>("cabinet-seats").Query<Button>(className: "seat").ToList();
                         if (cards.Count < 5) problems.Add($"{where}: {cards.Count} cards");
                         if (!(cards[0].worldBound.yMin < root.Q<ScrollView>("cabinet-seats").contentViewport.worldBound.yMax - 100)) problems.Add($"{where}: no card row in view");

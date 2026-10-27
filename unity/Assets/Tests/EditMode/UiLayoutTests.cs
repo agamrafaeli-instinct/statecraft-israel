@@ -352,6 +352,20 @@ public class UiLayoutTests
                 Assert.GreaterOrEqual(view.yMax, root.Q("cabinet-status").worldBound.yMin - 16f, $"{w}x{h}: the list leaves the panel empty below it");
                 var rows = list.Query<Button>(className: "seat").ToList();
                 Assert.Greater(rows.Count, 5, "the lineup was rendered");
+                // Red on BASE: the house is pinned above the list, consuming its viewport at 150% on short windows.
+                var house = root.Q("cabinet-house");
+                var cardsFirst = uiScale == 150 && root.worldBound.height < 800f;
+                Assert.AreEqual(cardsFirst, house.parent == list.contentContainer, $"{w}x{h}: house shares the cards' scroll only on short 150% windows");
+                if (cardsFirst)
+                {
+                    Assert.AreSame(house, list.contentContainer.Children().Last(), "the house and legend follow every seat card");
+                    Assert.GreaterOrEqual(house.worldBound.yMin, rows.Max(x => x.worldBound.yMax) - 0.5f, "the house starts below all card rows");
+                    Assert.Less(rows[0].worldBound.yMin, view.yMax - 100f, "a card row is visible before scrolling");
+                    if (house.worldBound.yMax > view.yMax + 0.5f)
+                        Assert.Greater(list.verticalScroller.highValue, 0f, "the house can be reached by scrolling");
+                }
+                else
+                    Assert.LessOrEqual(house.worldBound.yMax, view.yMin + 0.5f, "100%/125% and tall 150% keep the pinned house above the list");
                 foreach (var r in rows)
                 {
                     Assert.GreaterOrEqual(r.worldBound.yMin, view.yMin - 0.5f, $"{w}x{h}: {r.name} sits above the list");

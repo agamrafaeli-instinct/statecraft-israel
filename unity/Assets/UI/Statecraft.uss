@@ -410,9 +410,7 @@ Button:disabled { color: var(--ink-dim); border-color: rgba(120, 120, 120, 0.4);
 /* On the two-row bar the window is too narrow for the one-line chip beside the right column: it ran under the border
    layer's label (.map-layer, the column's left 250 px). The chip ends 12 px left of the column (16 px + 480 px) and wraps. */
 .hud-two-row .info-panel.info-empty { right: 508px; }
-/* The hint wraps wherever its chip is capped: here, and on the one-row bar where HudPresenter.HintChipCap keeps a long
-   hint clear of the right column (the Hebrew hint at 1280x1024). A hint that fits keeps its one line. */
-.info-empty #info-title { white-space: normal; }
+.hud-two-row .info-empty #info-title { white-space: normal; }
 /* On a phone upright the hint chip keeps the window's width from the left edge (two lines, InfoPanelLayoutTests), so it sits
    over Star, Report and Share (#1236): the window's 16 px, three 60 px discs with their 12 px margins, and a 12 px gap. */
 .hud-three-row .info-panel.info-empty { left: 16px; bottom: 244px; right: 254px; }
@@ -1177,3 +1175,14 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
 .info-primary-orders { flex-wrap: wrap; max-width: 100%; flex-shrink: 0; }
 /* Playtest B6: the city's name over its block on a hex that holds two cities (GddHexPanel.CityNameClass). */
 .city-part-name { -unity-font-style: bold; color: var(--gold-light); margin-top: 6px; }
+
+/* Owner 26 Oct: cards first at 150% on short windows. HudPresenter moves the house after the cards in the same scroll.
+   The base row/wrap (including Hebrew row-reverse) still lays out cards; the house starts its own final row. */
+.hud-tight.hud-scale-150.cabinet-cards-first #cabinet-seats .cabinet-house {
+    width: 100%; margin-left: 0; margin-right: 0;
+}
+/* Only the existing phone tier at 150% gives up the 320x168 pin. Height follows width in FitCabinet, at 168/320. */
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house .hemicycle-box {
+    width: 100%; max-width: 320px; margin-left: 0; margin-right: 0;
+}
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house .house-legend { min-width: 0; width: 100%; }
