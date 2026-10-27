@@ -705,7 +705,7 @@ public class PromoScreensTests
                     ps.referenceResolution = new Vector2Int(Mathf.RoundToInt(1920f * 100f / scale), Mathf.RoundToInt(1080f * 100f / scale));
                     for (int frame = 0; frame < 8; frame++) yield return null;
                     var first = scale == 150 && w >= 1280;
-                    Assert.AreSame(first ? list.contentContainer : main, house.parent, $"{w}x{h} {scale}%: house parent");
+                    Assert.AreSame(first ? list.contentContainer : main, house.hierarchy.parent, $"{w}x{h} {scale}%: house parent");
                     if (first) Assert.AreSame(house, list.contentContainer.Children().Last(), "cards precede the house");
                     else Assert.AreSame(house, main.Children().First(), "default UXML order restored");
                     var box = house.Q(className: "hemicycle-box");
@@ -719,7 +719,7 @@ public class PromoScreensTests
                     cabinet.Render();
                     Assert.AreSame(house, root.Q("cabinet-house"));
                     cabinet.Dispose();
-                    Assert.AreSame(main, house.parent, "disposing restores the house before clearing cards");
+                    Assert.AreSame(main, house.hierarchy.parent, "disposing restores the house before clearing cards");
                     cabinet = new CabinetPresenter(root, bridge, text, null);
                     Assert.AreSame(house, root.Q("cabinet-house"), "the same house survives rebuilding the cards");
                     Assert.Greater(list.Query<Button>(className: "seat").ToList().Count, 5);
@@ -803,6 +803,7 @@ public class PromoScreensTests
                     if (s == "cabinet")
                     {
                         var hemi = root.Q("cabinet-hemicycle");
+                        var snap = Mathf.Max(1.5f, 1f / hemi.panel.scaledPixelsPerPoint + 0.01f);
                         // Owner: only PHONES at 150% replace the 320x168 pin. In particular 1280x720 and 960x600
                         // are desktops even when their scaled HUD enters the three-row tier.
                         var phone150 = uiScale == 150 && (w == 390 || w == 360 || w == 375);
@@ -816,7 +817,8 @@ public class PromoScreensTests
                             if (Mathf.Abs(hemi.layout.height - hemi.layout.width * 168f / 320f) > 1.5f)
                                 problems.Add($"{where}: the phone half circle lost its 320:168 proportions");
                         }
-                        else if (Mathf.Abs(hemi.layout.width - HemicycleBox.x) > 1.5f || Mathf.Abs(hemi.layout.height - HemicycleBox.y) > 1.5f)
+                        // Pixel snapping moves it by up to one raster pixel: 1.9 logical px at 960x600 (Hebrew, 318.3 px wide).
+                        else if (Mathf.Abs(hemi.layout.width - HemicycleBox.x) > snap || Mathf.Abs(hemi.layout.height - HemicycleBox.y) > snap)
                             problems.Add($"{where}: the half circle is {hemi.layout.size}, not the unchanged {HemicycleBox}");
                         var cards = root.Q<ScrollView>("cabinet-seats").Query<Button>(className: "seat").ToList();
                         if (cards.Count < 5) problems.Add($"{where}: {cards.Count} cards");

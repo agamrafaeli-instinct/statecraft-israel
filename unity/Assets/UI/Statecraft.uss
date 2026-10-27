@@ -1195,4 +1195,14 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
 .hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house .hemicycle-box {
     width: 100%; max-width: 320px; margin-left: 0; margin-right: 0;
 }
-.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house .house-legend { min-width: 0; width: 100%; }
+/* The phone column (about 246 px) has no room for the half circle and the legend side by side: the house stacks them, the
+   half circle centred over the legend. In one wrapping row the legend shrank to 0 px beside the box and ran 14000 px tall. */
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house,
+.lang-he.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house { flex-direction: column; align-items: stretch; }
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house .hemicycle-box { align-self: center; }
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .cabinet-house .house-legend { min-width: 0; flex-shrink: 0; }
+/* The legend's lines and party chips wrap in the narrow column rather than run past it. */
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .house-legend > Label,
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .party-chip > Label { white-space: normal; }
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .party-chip,
+.hud-tight.hud-three-row.hud-scale-150.cabinet-phone-150 .party-chip > Label { flex-shrink: 1; min-width: 0; }

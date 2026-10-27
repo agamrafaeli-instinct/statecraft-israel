@@ -525,11 +525,13 @@ namespace Statecraft.Game.UI
             var seats = root.Q<ScrollView>("cabinet-seats");
             if (house == null || main == null || seats == null) return;
             var first = hud.ClassListContains(CabinetCardsFirstClass);
-            if (first && house.parent != seats.contentContainer)
+            // hierarchy.parent: a ScrollView child's logical parent is the ScrollView, never its content container, so
+            // comparing .parent re-added the house on every call, and its geometry callback looped the layout.
+            if (first && house.hierarchy.parent != seats.contentContainer)
             {
                 seats.Add(house); seats.scrollOffset = UnityEngine.Vector2.zero;
             }
-            else if (!first && house.parent != main)
+            else if (!first && house.hierarchy.parent != main)
             {
                 main.Insert(0, house); seats.scrollOffset = UnityEngine.Vector2.zero;
             }

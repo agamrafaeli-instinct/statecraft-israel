@@ -355,7 +355,7 @@ public class UiLayoutTests
                 // Red on BASE: the house is pinned above the list, consuming its viewport at 150% on short windows.
                 var house = root.Q("cabinet-house");
                 var cardsFirst = uiScale == 150 && root.worldBound.height < 800f;
-                Assert.AreEqual(cardsFirst, house.parent == list.contentContainer, $"{w}x{h}: house shares the cards' scroll only on short 150% windows");
+                Assert.AreEqual(cardsFirst, house.hierarchy.parent == list.contentContainer, $"{w}x{h}: house shares the cards' scroll only on short 150% windows");
                 if (cardsFirst)
                 {
                     Assert.AreSame(house, list.contentContainer.Children().Last(), "the house and legend follow every seat card");
