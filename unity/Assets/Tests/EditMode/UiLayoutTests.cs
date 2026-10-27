@@ -564,7 +564,11 @@ public class UiLayoutTests
                     // without scrolling; shorter windows may scroll the body as the fallback.
                     var scroll = root.Q<ScrollView>("event-scroll");
                     var logicalHeight = root.panel.visualTree.layout.height;
-                    if (logicalHeight >= EventCardPresenter.ScrollFallbackHeight && scroll.contentContainer.layout.height > scroll.contentViewport.layout.height + 1f)
+                    // PROTOTYPE (owner to pick, #1135): at 150% a window can be tall enough in logical px but too narrow for the
+                    // card's full width (800x1000 is 794 px wide, a phone 528), so the text wraps into more lines than at 100%;
+                    // there the body may scroll as the fallback. Hide and the options are still checked above, at every size.
+                    var narrowAt150 = uiScale == 150 && root.Q("event-card").worldBound.width < CardMaxWidth - 1f;
+                    if (!narrowAt150 && logicalHeight >= EventCardPresenter.ScrollFallbackHeight && scroll.contentContainer.layout.height > scroll.contentViewport.layout.height + 1f)
                         problems.Add($"{w}x{h} (logical height {logicalHeight:0}): {e.Id}: the body scrolls ({scroll.contentContainer.layout.height:0} px of text in {scroll.contentViewport.layout.height:0} px)");
                 }
                 Debug.Log($"I2 {w}x{h}: tallest card {tallestId} {tallest:0} px");
