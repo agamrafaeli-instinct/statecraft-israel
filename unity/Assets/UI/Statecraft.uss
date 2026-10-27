@@ -1025,7 +1025,8 @@ Button.settings-choice-selected { -unity-font-definition: url("project://databas
    size smaller than any the 100% layout is tested at, in both directions at once (1920x1080 at 150% is 1280x720
    logical). The stacked bar, the icon column, the decision layer and the panels take their tight sizes below, so the
    HUD holds at those sizes. The bounds (HudPresenter.TightBelowHeightPx and friends) sit between the smallest sizes the
-   100% suites pin and the sizes only a scale choice reaches: nothing here ever applies at 100%. */
+   100% suites pin and the sizes only a scale choice reaches. At 100% only a phone held upright (narrower than
+   TightBelowWidthPx, 390x844 is about 790 logical px) is tight. */
 /* The bar keeps its tier shapes, tightened: the rows the tiers wrap, at sizes the small logical height can pay. The
    three-row height is a floor the rows can outgrow (HudPresenter.PlaceUnderBar, TightThreeRowBarPx). */
 .hud-tight.hud-narrow .top-bar { height: 96px; }

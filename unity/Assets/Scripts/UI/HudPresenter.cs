@@ -59,7 +59,7 @@ namespace Statecraft.Game.UI
         public const string ThreeRowClass = "hud-three-row";
 
         /// <summary>The tight HUD (#40, the UI scale's 125% and 150%): a small logical window (1920x1080 at 150% is 1280x720
-        /// logical; a 360x800 phone at 150% is 644 px wide) gives the stacked bar, the icon column and the panels their tight
+        /// logical; a 360x800 phone at 150% is about 517 px wide) gives the stacked bar, the icon column and the panels their tight
         /// sizes (Statecraft.uss .hud-tight). Small phone windows at 100% reach these bounds too, so the tight HUD changes
         /// only layout sizes: the small text keeps the same screen-pixel floor (SmallTextSize) in and out of it.</summary>
         public const string TightClass = "hud-tight";
